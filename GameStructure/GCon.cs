@@ -3,17 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 /// <summary>
-/// Class for controlling entire Phyward
+/// Class for controlling entire Phyward (GameControl)
 /// </summary>
-public static class GlobalControl
+public static class GCon
 {
-    private static Dictionary<string, GameControl> games = new Dictionary<string, GameControl>();
+    public static Dictionary<string, GameControl> games = new Dictionary<string, GameControl>();
     /// <summary>
     /// Game of the selected account
     /// </summary>
     public static GameControl game;
+    public static bool gameStarted = false;
+    public static double percentageOfFrame = Time.fixedDeltaTime;
     /// <summary>
     /// Adds new player account
     /// </summary>
@@ -26,7 +29,7 @@ public static class GlobalControl
             games.Add(playerName, new GameControl(playerName));
             game = games[playerName];
             ToolsGame.CreateGame();
-            
+
             //ToolsSystem.SaveGame(games[playerName]);
 
             return true;
@@ -42,7 +45,7 @@ public static class GlobalControl
     {
         if (!games.ContainsKey(playerName))
         {
-            if (!ToolsSystem.LoadGame(playerName, out game))
+            if (true || !ToolsSystem.LoadGame(playerName, out game))
             {
                 AddGame(playerName);
             }

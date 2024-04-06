@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,36 +11,37 @@ using static ToolsSystem;
 using static UnityEditor.PlayerSettings;
 using static UnityEditor.Progress;
 
-public abstract class Item
+public abstract class Item : ActionHandler
 {
     public Item()
     {
     }
-    public Item((float, float) pos, Collider2D collider = null, string spritePath = "", Tilemap map = null)
+
+    public Item((float, float) pos, GameObject prefab, Tilemap map = null)
     {
         if (map == null)
         {
             map = GameObjects.solidLayer;
         }
+        this.Prefab = prefab;
+        this.prefabName = Prefab.name;
         InsertAtPosition(map, pos, false);
-        this.spritePath = spritePath;
         SetupItem();
     }
-    [JsonProperty]
-    public int Id { get; set; }
     //Don't use this X, Y and other GameObject parameters for the game itself - use it only for saving and loading the game
     [JsonProperty]
-    public float X { get; set; }
+    private float x;
     [JsonProperty]
-    public float Y { get; set; }
+    private float y;
     [JsonProperty]
     public float Rotation { get; set; }
     [JsonProperty]
-    private string spritePath;
-    [JsonProperty]
     private string tilemapName;
+    [JsonProperty]
+    private string prefabName;
     [JsonIgnore]
-    public GameObject Prefab { get; protected set; }
+    public GameObject Prefab { get; private set; }
+
     /// <summary>
     /// Whether to delete this Item when player leave the room
     /// </summary>
@@ -47,25 +49,25 @@ public abstract class Item
 
     private GameObject InsertAtPosition(Tilemap map, (float, float) pos, bool loadAssign = false)
     {
-        var obj = UnityEngine.Object.Instantiate(GameObjects.empty);
-        obj.SetActive(false);
-        X = pos.Item2;
-        Y = pos.Item1;
+        Prefab = UnityEngine.Object.Instantiate(Prefab);
+        Prefab.SetActive(false);
+        x = pos.Item2;
+        y = pos.Item1;
         if (loadAssign)
-            obj.transform.position = new Vector3(X, Y);
+            Prefab.transform.position = new Vector3(x, y);
         else
-            obj.transform.position = map.WorldToCell(new Vector3(X, Y));
-        this.Prefab = obj;
+            Prefab.transform.position = map.WorldToCell(new Vector3(x, y));
         this.Id = this.Prefab.GetInstanceID();
         this.tilemapName = map.name;
-        return obj;
+        return Prefab;
     }
     /// <summary>
     /// Called on loading of the game
     /// </summary>
     public void AssignPrefab()
     {
-        InsertAtPosition(GameObjects.GetTilemapByName(tilemapName), (Y, X), true);
+        Prefab = GameObjects.GetPrefabByName(this.prefabName);
+        InsertAtPosition(GameObjects.GetTilemapByName(tilemapName), (y, x), true);
         SetupItem();
         //Prefab.GetComponentInChildren<SpriteRenderer>().transform.up = Vector2.up;
         //Prefab.transform.rotation. =  
@@ -76,29 +78,38 @@ public abstract class Item
     public virtual void SaveItem()
     {
         //Rotation = Prefab.transform.rotation;
-        X = Prefab.transform.position.x;
-        Y = Prefab.transform.position.y;
+        x = Prefab.transform.position.x;
+        y = Prefab.transform.position.y;
     }
+    /// <summary>
+    /// This method is called in constructor and on load of the game.
+    /// </summary>
     protected virtual void SetupItem()
     {
+        GCon.game.Items.Add(Id, this);
         Rigidbody2D rb = Prefab.AddComponent<Rigidbody2D>();
         rb.simulated = true;
-        Prefab.
+        rb.gravityScale = 0;
+        ItemScript script = Prefab.AddComponent<ItemScript>();
+        script.item = this;
     }
 
     public virtual void Dispose()
     {
-        GlobalControl.game.CurLevel.GameObjects.Remove(this.Id);
+        GCon.game.Items.Remove(this.Id);
+        GCon.game.CurLevel.Items.Remove(this.Id);
+        if (GCon.game.ItemsStep.ContainsKey(Id))
+        {
+            GCon.game.ItemsStep.Remove(Id);
+        }
+
         UnityEngine.Object.Destroy(this.Prefab);
     }
 
-    public virtual void OnCollisionEnter(Collider2D collider)
-    { 
-    }
-    public virtual void OnCollisionLeave(Collider2D collider)
+    public virtual void OnCollisionEnter(Item collider)
     {
     }
-    public virtual void Update()
+    public virtual void OnCollisionLeave(Item collider)
     {
     }
     public virtual void OnLevelEnter()

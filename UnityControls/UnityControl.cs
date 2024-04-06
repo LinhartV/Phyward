@@ -23,33 +23,70 @@ public class UnityControl : MonoBehaviour
     [SerializeField]
     private GameObject empty;
 
+    [SerializeField]
+    private GameObject blueShot;
+    [SerializeField]
     private GameObject player;
+    [SerializeField]
+    public GameObject exit;
     // Start is called before the first frame update
     void Start()
     {
 
         ToolsGame.SetupGame();
-        GameObjects.SetPrefabs(empty, solidMap);
-        GlobalControl.StartGame("Try");
-        player = GlobalControl.game.Player.Prefab;
-        player.SetActive(true);
-        //player = GlobalControl.game.CurLevel?.InsertAtEmptyPosition(player, solidMap);
-
-
-        BuildLevel(GlobalControl.game.CurLevel, null);
+        GameObjects.SetPrefabs(exit, empty, player, blueShot, solidMap);
+        GCon.StartGame("Try");
+        GCon.game.Player.Prefab.SetActive(true);
+        BuildLevel(GCon.game.CurLevel, null);
         var camera = GameObject.FindGameObjectWithTag("MainCamera");
         if (player != null)
         {
-            camera.GetComponent<CameraFollow>().target = player.transform;
+            camera.GetComponent<CameraFollow>().target = GCon.game.Player.Prefab.transform;
+        }
+        GCon.gameStarted = true;
+    }
+    private void Update()
+    {
+        KeyPress();
+        KeyRelease();
+    }
+    private void FixedUpdate()
+    {
+        if (GCon.gameStarted)
+        {
+            foreach (Item item in GCon.game.ItemsStep.Values)
+            {
+                item.ExecuteActions(GCon.game.Now);
+            }
+            GCon.game.Now++;
         }
     }
 
     void OnApplicationQuit()
     {
-        ToolsSystem.SaveGame(GlobalControl.game);
+        ToolsSystem.SaveGame(GCon.game);
     }
 
-
+    private void KeyPress()
+    {
+        foreach (var key in KeyController.registeredKeys)
+        {
+            if (Input.GetKey(key.Key))
+            {
+                key.Value.Peek().KeyDown();
+            }
+        }
+    }
+    private void KeyRelease()
+    {
+        foreach (var key in KeyController.registeredKeys)
+        {
+            if (Input.GetKeyUp(key.Key))
+            {
+                key.Value.Peek().KeyUp();
+            }
+        }
+    }
 
     public void BuildLevel(Level level, Level prevLevel)
     {
@@ -79,7 +116,7 @@ public class UnityControl : MonoBehaviour
         }
         if (prevLevel != null)
         {
-            foreach (var obj in prevLevel.GameObjects.Values)
+            foreach (var obj in prevLevel.Items.Values)
             {
                 if (obj.Prefab.tag != "Player")
                 {
@@ -91,7 +128,7 @@ public class UnityControl : MonoBehaviour
                 }
             }
         }
-        foreach (var obj in level.GameObjects.Values)
+        foreach (var obj in level.Items.Values)
         {
             obj.Prefab.SetActive(true);
             obj.OnLevelEnter();

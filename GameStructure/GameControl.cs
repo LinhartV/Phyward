@@ -18,8 +18,17 @@ public class GameControl
     /// Increasing id to be assigned for levels during creation
     /// </summary>
     public int Id { get; set; } = 0;
+    public long Now { get; set; } = 0;
     public Dictionary<BiomType, Biom> bioms = new Dictionary<BiomType, Biom>();//{ { BiomType.meadow, new Biom("none", BiomType.meadow, 5, 2, new LinearGenerator()) } };
-    
+
+    /// <summary>
+    /// List of all items in the game
+    /// </summary>
+    public Dictionary<int, Item> Items { get; set; } = new Dictionary<int, Item>();
+    /// <summary>
+    /// List of items for which will be called update (e. g. Exits are not here)
+    /// </summary>
+    public Dictionary<int, Item> ItemsStep { get; set; } = new Dictionary<int, Item>();
     public Biom CurBiom { get; set; }
     
     public Level CurLevel { get; set; }

@@ -12,12 +12,14 @@ public abstract class Shot : Movable
     [JsonProperty]
     protected Character Character { get; set; }
     public Shot() { }
-    public Shot(GameObject obj, Tilemap map, (float, float) pos, float baseSpeed, float duration, int characterId) : base(obj, pos, baseSpeed, map)
+
+    protected Shot((float, float) pos, int characterId, float duration, float baseSpeed, double acceleration, double friction, GameObject prefab, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, map)
     {
-        Character = GlobalControl.game.CurLevel.GameObjects[characterId] as Character;
+        Character = GCon.game.CurLevel.Items[characterId] as Character;
         Duration = duration;
         DeleteOnLeave = true;
     }
+
     public float Duration { get; set; }
 }
 

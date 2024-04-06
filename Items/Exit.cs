@@ -13,18 +13,19 @@ using UnityEngine.Tilemaps;
 public class Exit : Item
 {
     public Exit(){ }
-    public Exit((float, float) pos, int exitX, int exitY, int levelId, int exitId, Tilemap map = null) : base(pos, map, new CircleCollider2D(), "")
+
+    public Exit((float, float) pos, int exitX, int exitY, int levelId, int exitId, Tilemap map = null) : base(pos, GameObjects.exit, map)
     {
-        this.exitX = exitX;
-        this.exitY = exitY;
+        this.ExitX = exitX;
+        this.ExitY = exitY;
         this.LevelId = levelId;
         this.ExitId = exitId;
-        SetupItem();
     }
+
     [JsonProperty]
-    private int exitX; 
+    public int ExitX { get; private set; } 
     [JsonProperty]
-    private int exitY;
+    public int ExitY { get; private set; }
     /// <summary>
     /// where this exit leads to
     /// </summary>

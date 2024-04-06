@@ -19,7 +19,7 @@ using Newtonsoft.Json;
         }
         public ConstantMovement() : base(){}
 
-        public override bool Frame(double friction, double percentage)
+        public override bool Frame(double friction)
         {
             stopMovement++;
             if (stopMovement > 1)
@@ -34,9 +34,9 @@ using Newtonsoft.Json;
             }
         }
 
-        public override (double, double) Move(double percentage)
+        public override (float, float) Move()
         {
-            return ToolsMath.PolarToCartesian(Angle, MovementSpeed * percentage); 
+            return ToolsMath.PolarToCartesian(Angle, MovementSpeed * GCon.percentageOfFrame); 
 
         }
 
@@ -48,7 +48,7 @@ using Newtonsoft.Json;
         {
             this.baseSpeed = speed;
         }
-        public override void UpdateMovement(double percentage)
+        public override void UpdateMovement()
         {
             stopMovement = 0;
         }

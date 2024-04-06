@@ -17,9 +17,9 @@ public static class ToolsMath
     /// Changes angle from polar coordinates to cartesian
     /// </summary>
     /// <returns>width and height</returns>
-    public static (double, double) PolarToCartesian(double angle, double size)
+    public static (float, float) PolarToCartesian(double angle, double size)
     {
-        return (size * Math.Cos(angle), size * Math.Sin(angle));
+        return ((float)(size * Math.Sin(angle)), -(float)(size * Math.Cos(angle)));
     }
     static public double GetAngleFromLengts(Item it1, Item it2)
     {

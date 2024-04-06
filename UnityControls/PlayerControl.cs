@@ -8,7 +8,6 @@ using UnityEngine;
 public class PlayerControl : MonoBehaviour
 {
     public LayerMask solidLayer;
-    private float movementSpeed = 15;
     public Rigidbody2D rb;
     Vector2 finalMovement;
     public float raycastOffset = 0.55f;
@@ -38,23 +37,23 @@ public class PlayerControl : MonoBehaviour
             finalMovement.y = -1;
         }
         //Rotate to face pointer
-        var mousePosition = Input.mousePosition;
+        /*var mousePosition = Input.mousePosition;
         mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
-        this.GetComponentInChildren<SpriteRenderer>().transform.up = new Vector2(mousePosition.x - transform.position.x, mousePosition.y - transform.position.y);
+        this.GetComponentInChildren<SpriteRenderer>().transform.up = new Vector2(mousePosition.x - transform.position.x, mousePosition.y - transform.position.y);*/
         //Shooting
         if (Input.GetMouseButton(0))
         {
-            GlobalControl.game.Player.Weapon.Fire();
+            GCon.game.Player.Weapon.Fire();
         }
     }
-    private void FixedUpdate()
+    /*private void FixedUpdate()
     {
         if (finalMovement != Vector2.zero)
         {
             finalMovement = finalMovement.normalized;
             rb.MovePosition(rb.position + finalMovement * movementSpeed * Time.fixedDeltaTime);
         }
-    }
+    }*/
 
     /*private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -63,19 +62,10 @@ public class PlayerControl : MonoBehaviour
 
         }
     }*/
-    private void OnTriggerEnter2D(Collider2D collision)
+    /*private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision != null)
-        {
-            if (collision.tag == "Exit")
-            {
-                var lvl = GlobalControl.game.CurBiom.levels[(GlobalControl.game.CurLevel.GameObjects[collision.GetInstanceID()] as Exit).LevelId];
-                GameObject.Find("UnityControl").GetComponent<UnityControl>().BuildLevel(lvl, GlobalControl.game.CurLevel);
-                GlobalControl.game.CurLevel = lvl;
-                this.transform.position = GlobalControl.game.CurLevel.GetExitPos((GlobalControl.game.CurLevel.GameObjects[collision.GetInstanceID()] as Exit).ExitId);
-            }
-        }
-    }
+        
+    }*/
     /*private void OnCollisionExit2D(Collision2D collision)
     {
         if (collision != null && collision.collider.tag == "Ground")

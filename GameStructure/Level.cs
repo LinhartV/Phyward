@@ -21,7 +21,7 @@ public class Level : ExitHandler
 
     public MazeTile[,] Maze { get; set; }
     [JsonProperty]
-    public Dictionary<int, Item> GameObjects { get; set; } = new Dictionary<int, Item>();
+    public Dictionary<int, Item> Items { get; set; } = new Dictionary<int, Item>();
     [JsonProperty]
     private List<(int, int)> emptyPos = new List<(int, int)>();
     public Level(int id, ILevelGenerator generator, int width, int height, List<PreExit>[] exits) : base(false)
@@ -29,12 +29,12 @@ public class Level : ExitHandler
         Id = id;
         this.ExitsAr = exits;
         Maze = generator.GenerateLevel(width, height, exits, out emptyPos, this);
-        AddItem(GlobalControl.game.Player);
+        //AddItem(GCon.game.Player);
     }
 
     public void AddItem(Item item)
     {
-        GameObjects.Add(item.Id, item);
+        Items.Add(item.Id, item);
     }
 
 

@@ -9,8 +9,10 @@ using UnityEngine.Tilemaps;
 
 public abstract class Character : Movable
 {
+    //Coeficients modifying weapon
     public float CharDamage { get; set; }
     public float CharShotSpeed { get; set; }
+    public float CharShotDuration { get; set; }
     public float Lives { get; set; }
     public float CharReloadTime { get; set; }
     [JsonProperty]
@@ -25,7 +27,7 @@ public abstract class Character : Movable
         }
     }
     public Character() { }
-    public Character(GameObject obj, Tilemap map, (float, float) pos, float baseSpeed, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float lives) : base(obj, pos, baseSpeed, map)
+    public Character((float, float) pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float lives, GameObject prefab, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, map)
     {
         this.CharDamage = charDamage;
         this.CharReloadTime = charReloadTime;

@@ -32,19 +32,17 @@ public static class ToolsSystem
             Directory.CreateDirectory("./SavedGames");
         }
         string destination = "./SavedGames/" + game.PlayerName + ".json";
-        //string jsonString = JsonUtility.ToJson(game);
-        GlobalControl.game.Player.X = GlobalControl.game.Player.Prefab.transform.position.x;
-        GlobalControl.game.Player.Y = GlobalControl.game.Player.Prefab.transform.position.y;
-        foreach (var biom in game.bioms.Values)
+
+        //before saving simulate key release of all keys
+        foreach(var key in KeyController.registeredKeys.Values)
         {
-            foreach (var lvl in biom.levels.Values)
-            {
-                foreach (var item in lvl.GameObjects.Values)
-                {
-                    item.SaveItem();
-                }
-            }
+            key.Peek().KeyUp();
         }
+        foreach (var item in game.Items.Values)
+        {
+            item.SaveItem();
+        }
+
         string jsonString = JsonConvert.SerializeObject(game, jsonSerializerSettings);
         File.WriteAllText(destination, jsonString);
     }
@@ -68,12 +66,12 @@ public static class ToolsSystem
         try
         {
             game = JsonConvert.DeserializeObject<GameControl>(jsonString, jsonSerializerSettings);
-            GlobalControl.game.Player.AssignPrefab();
+            GCon.game.Player.AssignPrefab();
             foreach (var biom in game.bioms.Values)
             {
                 foreach (var lvl in biom.levels.Values)
                 {
-                    foreach (var item in lvl.GameObjects.Values)
+                    foreach (var item in lvl.Items.Values)
                     {
                         item.AssignPrefab();
                     }

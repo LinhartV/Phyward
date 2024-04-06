@@ -31,7 +31,7 @@ public class ExitHandler
     /// Gets position of exit by it's id
     /// </summary>
     /// <returns>Position of found exit</returns>
-    public Vector3 GetExitPos(int exitId)
+    /*public Vector3 GetExitPos(int exitId)
     {
         for (int i = 0; i < ExitsAr.Length; i++)
         {
@@ -44,7 +44,7 @@ public class ExitHandler
             }
         }
         return Vector3.one;
-    }
+    }*/
     /// <summary>
     /// Adds a new exit
     /// </summary>

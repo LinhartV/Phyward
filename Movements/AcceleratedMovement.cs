@@ -30,11 +30,11 @@ using System.Threading.Tasks;
         }
         public AcceleratedMovement():base(){}
 
-        public override bool Frame(double friction, double percentage)
+        public override bool Frame(double friction)
         {
-            if (this.MovementSpeed > 0.05)
+            if (this.MovementSpeed > 0.0005)
             {
-                MovementSpeed -= friction * percentage;
+                MovementSpeed -= friction * GCon.percentageOfFrame;
                 return false;
             }
             else
@@ -44,9 +44,9 @@ using System.Threading.Tasks;
             }
         }
 
-        public override (double, double) Move(double percentage)
+        public override (float, float) Move()
         {
-            return ToolsMath.PolarToCartesian(Angle, MovementSpeed * percentage);
+            return ToolsMath.PolarToCartesian(Angle, MovementSpeed * GCon.percentageOfFrame);
         }
 
         public override void ResetMovementAngle(double angle)
@@ -58,11 +58,11 @@ using System.Threading.Tasks;
             maxSpeed = speed;
         }
 
-        public override void UpdateMovement(double percentage)
+        public override void UpdateMovement()
         {
             if (MovementSpeed < maxSpeed)
             {
-                MovementSpeed += Acceleration * percentage;
+                MovementSpeed += Acceleration * GCon.percentageOfFrame;
             }
             else
             {
