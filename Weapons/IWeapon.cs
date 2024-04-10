@@ -19,32 +19,31 @@ public abstract class IWeapon
     [JsonProperty]
     private string prefabName;
     [JsonProperty]
-    protected bool reloaded;
+    public bool Reloaded { get; set; }
+    [JsonProperty]
+    public bool AutoFire { get; set; }
 
     public IWeapon() { }
-    protected IWeapon(int reloadTime, float damage, float shotSpeed, float shotDuration, GameObject shotPrefab)
+    protected IWeapon(int reloadTime, float damage, float shotSpeed, float shotDuration, GameObject shotPrefab, bool autoFire = true)
     {
+        Reloaded = true;
         ReloadTime = reloadTime;
         Damage = damage;
         ShotSpeed = shotSpeed;
         ShotDuration = shotDuration;
         this.prefabName = shotPrefab.name;
         this.shotPrefab = shotPrefab;
-        //this.collider = collider;
+        AutoFire = autoFire;
+    }
+
+    public void SetupWeapon()
+    {
+        this.shotPrefab = GameObjects.GetPrefabByName(this.prefabName);
     }
 
     protected void Fire(Shot shot)
     {
-        if (reloaded)
-        {
-            GCon.game.CurLevel.AddItem(shot);
-            reloaded = false;
-            Task.Run(async () =>
-            {
-                await Task.Delay(ReloadTime);
-                reloaded = true;
-            });
-        }
+        GCon.game.CurLevel.AddItem(shot);
     }
     public abstract void Fire();
 }

@@ -30,9 +30,17 @@ public class ActionHandler
     /// </summary>
     public void ExecuteActions(long now)
     {
+        if (this is Movable m)
+        {
+            m.CorrectSpeed();
+        }
         foreach (var action in actionsEveryFrame.Values)
         {
             LambdaActions.ExecuteAction(action.ActionName, this, action.Parameters);
+        }
+        if (this is Movable mm)
+        {
+            mm.Move();
         }
 
         Dictionary<string, (long, ItemAction)> tempActions = new Dictionary<string, (long, ItemAction)>(actions);
@@ -103,6 +111,11 @@ public class ActionHandler
     /// <param name="rewrite">Whether to rewrite running action</param>
     public void AddAction(ItemAction action, string storeName, long delay = 0, RewriteEnum rewrite = RewriteEnum.Rewrite)
     {
+        if (!GCon.game.ItemsStep.ContainsKey(this.Id))
+        {
+            GCon.game.ItemsStep.Add(this.Id, this);
+        }
+        
         if (action.Repeat > 1 || action.Repeat == 0)
         {
             if (!actions.ContainsKey(storeName))
@@ -140,5 +153,17 @@ public class ActionHandler
         }
         if (actionsEveryFrame.ContainsKey(name))
             actionsEveryFrame.Remove(name);
+        if (actions.Count == 0 && actionsEveryFrame.Count == 0)
+        {
+            GCon.game.ItemsStep.Remove(this.Id);
+        }
+    }
+
+    public virtual void Dispose()
+    {
+        if (GCon.game.ItemsStep.ContainsKey(Id))
+        {
+            GCon.game.ItemsStep.Remove(Id);
+        }
     }
 }

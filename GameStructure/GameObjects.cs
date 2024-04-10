@@ -21,7 +21,7 @@ public static class GameObjects
     {
         tilemaps.Add(_solidLayer.name, _solidLayer);
         prefabs.Add(_empty.name, _empty);
-        prefabs.Add(_exit.name, _empty);
+        prefabs.Add(_exit.name, _exit);
         prefabs.Add(_player.name, _player);
         prefabs.Add(_blueShot.name, _blueShot);
         empty = _empty;

@@ -45,8 +45,8 @@ public abstract class IBiomGenerator
     /// <returns></returns>
     protected Level CreateLevel(ILevelGenerator generator, GameControl gameControlReference, Biom biom, int width, int height, List<PreExit>[] exits)
     {
-        var lvl = new Level(gameControlReference.Id++, generator, width, height, exits);
-        biom.levels.Add(gameControlReference.Id, lvl);
+        var lvl = new Level(gameControlReference.IdLevels++, generator, width, height, exits);
+        biom.levels.Add(gameControlReference.IdLevels, lvl);
         return lvl;
 
     }

@@ -14,18 +14,24 @@ public class ItemScript : MonoBehaviour
     {
         item.OnCollisionLeave(GCon.game.Items[collision.gameObject.GetInstanceID()]);
     }*/
+    private void FixedUpdate()
+    {
+        
+    }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (GCon.game.Items.ContainsKey(collision.gameObject.GetInstanceID()))
-            item.OnCollisionEnter(GCon.game.Items[collision.gameObject.GetInstanceID()]);
+        int collisionId = collision.gameObject.GetComponent<ItemScript>().item.Id;
+        if (GCon.game.Items.ContainsKey(collisionId))
+            item.OnCollisionEnter(GCon.game.Items[collisionId]);
         else
             item.OnCollisionEnter(new Block());
 
     }
     private void OnTriggerExit2D(Collider2D collision)
     {
-        if (GCon.game.Items.ContainsKey(collision.gameObject.GetInstanceID()))
-            item.OnCollisionLeave(GCon.game.Items[collision.gameObject.GetInstanceID()]);
+        int collisionId = collision.gameObject.GetComponent<ItemScript>().item.Id;
+        if (GCon.game.Items.ContainsKey(collisionId))
+            item.OnCollisionLeave(GCon.game.Items[collisionId]);
         else
             item.OnCollisionLeave(new Block());
     }

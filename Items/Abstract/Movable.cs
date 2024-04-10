@@ -13,24 +13,15 @@ public abstract class Movable : Item
     /// Whether to set the angle of the item in the direction of a travel
     /// </summary>
     public bool SetAngle { get; set; } = true;
-    // Angle where the character is "looking" (for picture, shooting and stuff)
-    private double angle;
-    public double Angle
-    {
-        get => angle;
-        set
-        {
-            angle = value % (Math.PI * 2);
-        }
-    }
     [JsonProperty]
-    private double baseSpeed;
+    private float baseSpeed;
     /// <summary>
     /// Overall speed of an item
     /// </summary>
-    public double BaseSpeed
+    public float BaseSpeed
     {
-        get => baseSpeed; set
+        get => baseSpeed;
+        set
         {
             baseSpeed = value;
             foreach (var movement in MovementsControlled.Values)
@@ -40,10 +31,17 @@ public abstract class Movable : Item
         }
     }
     [JsonProperty]
-    private double friction;
-    public double Friction { get => friction; set => friction = Math.Abs(value); }
-    private double acceleration;
-    public double Acceleration
+    private float friction;
+    public float Friction
+    {
+        get => friction;
+        set
+        {
+            friction = Math.Abs(value);
+        }
+    }
+    private float acceleration;
+    public float Acceleration
     {
         get => acceleration;
         set
@@ -53,23 +51,60 @@ public abstract class Movable : Item
             {
                 if (movement is AcceleratedMovement am)
                     am.Acceleration = value;
+                if (movement is CompositeMovement cm)
+                {
+                    foreach (var pm in cm.partialMovements.Values)
+                    {
+                        if (pm is AcceleratedMovement a)
+                        {
+                            a.Acceleration = value;
+                        }
+                    }
+                }
             }
         }
     }
-    //Movements once set and controlled just by the movement itself. It deletes itself when speed is 0. (e.g. explosion)
+    //Movements once set and controlled just by the movement itself. It deletes itself when speed is 0. (e.g. shot speed)
     [JsonProperty]
     public List<IMovement> MovementsAutomated { get; set; } = new List<IMovement>();
     //Movements controlled by other actions, such as player control. Accesed by id and not deleted even when speed is 0.
     [JsonProperty]
     public Dictionary<string, IMovement> MovementsControlled { get; set; } = new Dictionary<string, IMovement>();
+    [JsonProperty]
+    private float xVelocity;
+    [JsonProperty]
+    private float yVelocity;
+    [JsonIgnore]
+    private Vector2 prevVelocity;
     public Movable() { }
-    public Movable((float, float) pos, float baseSpeed, double acceleration, double friction, GameObject prefab, Tilemap map = null) : base(pos, prefab, map)
+    public Movable((float, float) pos, float baseSpeed, float acceleration, float friction, GameObject prefab, bool isSolid = true, Tilemap map = null) : base(pos, prefab, isSolid, map)
     {
         this.BaseSpeed = baseSpeed;
         this.acceleration = acceleration;
         this.friction = friction;
-        this.AddAction(new ItemAction("move", 1));
-        GCon.game.ItemsStep.Add(this.Id, this);
+    }
+    public override void SaveItem()
+    {
+        xVelocity = rb.velocity.x;
+        yVelocity = rb.velocity.y;
+        base.SaveItem();
+    }
+    protected override void SetupItem()
+    {
+        base.SetupItem();
+        this.rb.velocity = new Vector2(xVelocity, yVelocity);
+    }
+    public void CorrectSpeed()
+    {
+        List<IMovement> allMovements = new List<IMovement>(MovementsAutomated);
+        allMovements.AddRange(MovementsControlled.Values);
+        if (prevVelocity != rb.velocity)
+        {
+            foreach (var movement in allMovements)
+            {
+                movement.SetSpeedAccordingToPrefabVelocity(rb);
+            }
+        }
     }
     /// <summary>
     /// Move the current object based on it's movements
@@ -78,6 +113,7 @@ public abstract class Movable : Item
     {
         List<IMovement> allMovements = new List<IMovement>(MovementsAutomated);
         allMovements.AddRange(MovementsControlled.Values);
+        
         (float, float) xy;
         float x = 0;
         float y = 0;
@@ -89,16 +125,16 @@ public abstract class Movable : Item
             }
             xy = movement.Move(); //ToolsMath.PolarToCartesian(movement.Angle, movement.MovementSpeed);
             x += xy.Item1;
-            y -= xy.Item2;
+            y += xy.Item2;
         }
-        Rigidbody2D rb = this.Prefab.GetComponent<Rigidbody2D>();
-        rb.MovePosition(new Vector2(rb.position.x + x, rb.position.y + y));
+        rb.velocity = (new Vector2(x, y));
         //this.X += x;
         //this.Y += y;
         if (SetAngle)
         {
-            Angle = ToolsMath.GetAngleFromLengts(x, -y);
+            Angle = ToolsMath.GetAngleFromLengts(x, y);
         }
+        prevVelocity = rb.velocity;
     }
     /// <summary>
     /// Creates new movement which is controlled only by movement itself (deletes itself when 0)
@@ -144,7 +180,7 @@ public abstract class Movable : Item
     /// <param name="movementName">Name of the movement to rotate</param>
     /// <param name="angleRotation">Angle to set or rotate by</param>
     /// <param name="rotate">Set true for relative rotation, set false to set the angle</param>
-    public void RotateControlledMovement(string movementName, double angleRotation, bool rotate = true)
+    public void RotateControlledMovement(string movementName, float angleRotation, bool rotate = true)
     {
         if (MovementsControlled.ContainsKey(movementName))
         {

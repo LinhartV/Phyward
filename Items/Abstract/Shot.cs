@@ -13,13 +13,22 @@ public abstract class Shot : Movable
     protected Character Character { get; set; }
     public Shot() { }
 
-    protected Shot((float, float) pos, int characterId, float duration, float baseSpeed, double acceleration, double friction, GameObject prefab, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, map)
+    protected Shot((float, float) pos, int characterId, float duration, float maxspeed, float initialSpeed, float acceleration, float friction, GameObject prefab, Tilemap map = null) : base(pos, maxspeed, acceleration, friction, prefab, false, map)
     {
-        Character = GCon.game.CurLevel.Items[characterId] as Character;
-        Duration = duration;
+        Character = GCon.game.Items[characterId] as Character;
         DeleteOnLeave = true;
+        this.AddAction(new ItemAction("dispose", duration, ItemAction.ExecutionType.OnlyFirstTime));
+        this.AddAutomatedMovement(new AcceleratedMovement(initialSpeed, Character.Angle, acceleration, maxspeed));
     }
-
-    public float Duration { get; set; }
+    public override void OnCollisionEnter(Item collider)
+    {
+        if (!GCon.gameStarted)
+            return; 
+        base.OnCollisionEnter(collider);
+        if (collider.IsSolid && collider.Id != this.Character.Id)
+        {
+            this.Dispose();
+        }
+    }
 }
 

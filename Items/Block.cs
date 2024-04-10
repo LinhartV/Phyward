@@ -12,6 +12,8 @@ using UnityEngine.Tilemaps;
 [Serializable]
 public class Block : Item
 {
-    public Block(){ }
+    public Block(){
+        this.IsSolid = true;
+    }
 }
 

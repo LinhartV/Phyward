@@ -43,27 +43,28 @@ public static class LambdaActions
             var mousePosition = Input.mousePosition;
             mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
             p.Prefab.GetComponentInChildren<SpriteRenderer>().transform.up = new Vector2(mousePosition.x - p.Prefab.transform.position.x, mousePosition.y - p.Prefab.transform.position.y);
+            p.Angle = ToolsMath.GetAngleFromLengts(mousePosition.x - p.Prefab.transform.position.x, mousePosition.y - p.Prefab.transform.position.y);
         });
-        lambdaActions.Add("move", (item, parameters) =>
+        lambdaActions.Add("fire1", (item, parameters) =>
         {
-            (item as Movable).Move();
-        });
-        /*lambdaActions.Add("fire1", (item, parameters) =>
-        {
-            Character character = gvars.Items[id] as Character;
-            if (!character.WeaponNode.Weapon.Reloaded)
+            Character character = item as Character;
+            if (!character.Weapon.Reloaded)
             {
                 character.DeleteAction("fire");
-                character.WeaponNode.Weapon.Reloaded = true;
+                character.Weapon.Reloaded = true;
             }
             else
             {
-                character.WeaponNode.Weapon.Fire(gvars);
+                character.Weapon.Fire();
             }
 
         }
-        );*/
-
+        );
+        lambdaActions.Add("fire2", (item, parameter) => { (item as Character).Weapon.Reloaded = true; });
+        lambdaActions.Add("dispose", (item, parameter) =>
+        {
+            item.Dispose();
+        });
     }
     public static void ExecuteAction(string actionName, ActionHandler item, params object[] parameters)
     {

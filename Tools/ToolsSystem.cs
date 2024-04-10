@@ -25,6 +25,45 @@ public static class ToolsSystem
         ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
         ContractResolver = new PrivateSetterContractResolver()
     };
+    /// <summary>
+    /// Loads game from save file or creates new when file is not found.
+    /// </summary>
+    /// <param name="playerName">Doesn't really matter... (idea was adding possibility to create more accounts... I realized it would be useless)</param>
+    public static void StartGame(string playerName)
+    {
+        if (!GCon.games.ContainsKey(playerName))
+        {
+            if (!LoadGame(playerName, out GCon.game))
+            {
+                AddGame(playerName);
+            }
+        }
+        else
+        {
+            GCon.game = GCon.games[playerName];
+        }
+    }
+    /// <summary>
+    /// Adds new player account
+    /// </summary>
+    /// <param name="playerName">Unique name of the player</param>
+    /// <returns>Whether the new account was created successfully</returns>
+    private static bool AddGame(string playerName)
+    {
+        if (!GCon.games.ContainsKey(playerName))
+        {
+            GCon.games.Add(playerName, new GameControl(playerName));
+            GCon.game = GCon.games[playerName];
+            ToolsGame.CreateGame();
+
+            //ToolsSystem.SaveGame(games[playerName]);
+
+            return true;
+        }
+        else
+            return false;
+    }
+
     public static void SaveGame(GameControl game)
     {
         if (!Directory.Exists("./SavedGames"))
@@ -34,9 +73,12 @@ public static class ToolsSystem
         string destination = "./SavedGames/" + game.PlayerName + ".json";
 
         //before saving simulate key release of all keys
-        foreach(var key in KeyController.registeredKeys.Values)
+        foreach (var key in KeyController.registeredKeys.Values)
         {
-            key.Peek().KeyUp();
+            if (key.Peek().Pressed)
+            {
+                key.Peek().KeyUp();
+            }
         }
         foreach (var item in game.Items.Values)
         {
@@ -67,15 +109,9 @@ public static class ToolsSystem
         {
             game = JsonConvert.DeserializeObject<GameControl>(jsonString, jsonSerializerSettings);
             GCon.game.Player.AssignPrefab();
-            foreach (var biom in game.bioms.Values)
+            foreach (var item in game.Items.Values)
             {
-                foreach (var lvl in biom.levels.Values)
-                {
-                    foreach (var item in lvl.Items.Values)
-                    {
-                        item.AssignPrefab();
-                    }
-                }
+                item.AssignPrefab();
             }
             //game = JsonUtility.FromJson<GameControl>(jsonString);
             return true;

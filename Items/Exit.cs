@@ -12,9 +12,9 @@ using UnityEngine.Tilemaps;
 [Serializable]
 public class Exit : Item
 {
-    public Exit(){ }
+    public Exit() { }
 
-    public Exit((float, float) pos, int exitX, int exitY, int levelId, int exitId, Tilemap map = null) : base(pos, GameObjects.exit, map)
+    public Exit((float, float) pos, int exitX, int exitY, int levelId, int exitId, Tilemap map = null) : base(pos, GameObjects.exit, false, map)
     {
         this.ExitX = exitX;
         this.ExitY = exitY;
@@ -23,7 +23,7 @@ public class Exit : Item
     }
 
     [JsonProperty]
-    public int ExitX { get; private set; } 
+    public int ExitX { get; private set; }
     [JsonProperty]
     public int ExitY { get; private set; }
     /// <summary>

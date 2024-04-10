@@ -5,6 +5,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using static ToolsGame;
+using static UnityEditor.Progress;
 
 /// <summary>
 /// Just what it says...
@@ -35,7 +36,7 @@ public class UnityControl : MonoBehaviour
 
         ToolsGame.SetupGame();
         GameObjects.SetPrefabs(exit, empty, player, blueShot, solidMap);
-        GCon.StartGame("Try");
+        ToolsSystem.StartGame("Try");
         GCon.game.Player.Prefab.SetActive(true);
         BuildLevel(GCon.game.CurLevel, null);
         var camera = GameObject.FindGameObjectWithTag("MainCamera");
@@ -54,7 +55,8 @@ public class UnityControl : MonoBehaviour
     {
         if (GCon.gameStarted)
         {
-            foreach (Item item in GCon.game.ItemsStep.Values)
+            Dictionary<int, ActionHandler> temp = new Dictionary<int, ActionHandler>(GCon.game.ItemsStep);
+            foreach (ActionHandler item in temp.Values)
             {
                 item.ExecuteActions(GCon.game.Now);
             }
@@ -116,7 +118,8 @@ public class UnityControl : MonoBehaviour
         }
         if (prevLevel != null)
         {
-            foreach (var obj in prevLevel.Items.Values)
+            var temp = new List<Item>(prevLevel.Items.Values);
+            foreach (var obj in temp)
             {
                 if (obj.Prefab.tag != "Player")
                 {

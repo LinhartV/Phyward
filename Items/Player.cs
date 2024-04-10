@@ -14,13 +14,14 @@ public class Player : Character
 {
     public Player() { }
 
-    public Player((float, float) pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float lives, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, weapon, charDamage, charReloadTime, charShotSpeed, lives, GameObjects.player, map)
+    public Player((float, float) pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, weapon, charDamage, charReloadTime, charShotSpeed, charShotDuration, lives, GameObjects.player, true, map)
     {
         this.AddControlledMovement(new AcceleratedMovement(0, 0, this.Acceleration, BaseSpeed), "up");
-        this.AddControlledMovement(new AcceleratedMovement(0, Math.PI / 2, this.Acceleration, BaseSpeed), "right");
-        this.AddControlledMovement(new AcceleratedMovement(0, Math.PI, this.Acceleration, BaseSpeed), "down");
-        this.AddControlledMovement(new AcceleratedMovement(0, 3 * Math.PI / 2, this.Acceleration, BaseSpeed), "left");
+        this.AddControlledMovement(new AcceleratedMovement(0, (float)Math.PI / 2, this.Acceleration, BaseSpeed), "right");
+        this.AddControlledMovement(new AcceleratedMovement(0, (float)Math.PI, this.Acceleration, BaseSpeed), "down");
+        this.AddControlledMovement(new AcceleratedMovement(0, (float)(3 * Math.PI / 2), this.Acceleration, BaseSpeed), "left");
         this.AddAction(new ItemAction("faceCursor", 1));
+        SetAngle = false;
     }
 
     protected override void SetupItem()
@@ -31,6 +32,8 @@ public class Player : Character
     }
     public override void OnCollisionEnter(Item collider)
     {
+        if (!GCon.gameStarted)
+            return;
         base.OnCollisionEnter(collider);
         if (collider != null)
         {

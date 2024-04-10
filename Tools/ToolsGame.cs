@@ -43,7 +43,7 @@ public static class ToolsGame
 
         GCon.game.CurBiom = GCon.game.bioms[ToolsGame.BiomType.meadow];
         GCon.game.CurLevel = GCon.game.CurBiom.levels[0];
-        GCon.game.Player = (new Player(GCon.game.CurLevel.GetEmptyPosition(), 12.5f, 10, 5.5f, new BasicWeapon(1, 1, 1, 1, GameObjects.blueShot), 1, 1, 1, 100));
+        GCon.game.Player = (new Player(GCon.game.CurLevel.GetEmptyPosition(), 12.5f, 10, 5.5f, new BasicWeapon(20, 1, 0.01f, 500, GameObjects.blueShot), 1, 1, 1, 1, 100));
 
     }
 
@@ -93,32 +93,32 @@ public static class ToolsGame
             GCon.game.Player.DeleteAction("right");
         }
         ));
-        /*
-        actions.Add(PlayerActionsEnum.fire, new KeyCommand((id, gvars) =>
+        actions.Add(PlayerActionsEnum.fire, (() =>
         {
-            if (gvars.ItemsPlayers[id].WeaponNode.Weapon.Reloaded)
+            if (GCon.game.Player.Weapon.Reloaded)
             {
-                if (gvars.ItemsPlayers[id].WeaponNode.Weapon.AutoFire)
+                if (GCon.game.Player.Weapon.AutoFire)
                 {
-                    gvars.ItemsPlayers[id].AddAction(gvars, new ItemAction("fire1", gvars.ItemsPlayers[id].WeaponNode.Weapon.ReloadTimeCoef * gvars.ItemsPlayers[id].ReloadTime, ItemAction.ExecutionType.EveryTime), "fire");
+                    GCon.game.Player.AddAction(new ItemAction("fire1", GCon.game.Player.Weapon.ReloadTime * GCon.game.Player.CharReloadTime, ItemAction.ExecutionType.EveryTime), "fire");
                 }
                 else
                 {
-                    gvars.ItemsPlayers[id].WeaponNode.Weapon.Fire(gvars);
-                    gvars.ItemsPlayers[id].WeaponNode.Weapon.Reloaded = false;
-                    gvars.ItemsPlayers[id].AddAction(gvars, new ItemAction("fire2", gvars.ItemsPlayers[id].WeaponNode.Weapon.ReloadTimeCoef * gvars.ItemsPlayers[id].ReloadTime, ItemAction.ExecutionType.OnlyFirstTime), "fire");
+                    GCon.game.Player.Weapon.Fire();
+                    GCon.game.Player.Weapon.Reloaded = false;
+                    GCon.game.Player.AddAction(new ItemAction("fire2", GCon.game.Player.Weapon.ReloadTime * GCon.game.Player.CharReloadTime, ItemAction.ExecutionType.OnlyFirstTime), "fire");
                 }
             }
             else
             {
-                gvars.ItemsPlayers[id].WeaponNode.Weapon.Reloaded = true;
+                GCon.game.Player.Weapon.Reloaded = true;
             }
-        },
-        (id, gvars) =>
+
+        }, () =>
         {
-            gvars.ItemsPlayers[id].WeaponNode.Weapon.Reloaded = false;
-        }));
-        //Movements
+            GCon.game.Player.Weapon.Reloaded = false;
+        }
+        ));
+        /*//Movements
         actions.Add(PlayerActionsEnum.moveUp, new KeyCommand((id, gvars) =>
         {
             gvars.ItemsPlayers[id].AddAction(gvars, new ItemAction("up", 1, ItemAction.ExecutionType.EveryTime, true));

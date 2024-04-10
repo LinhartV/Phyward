@@ -17,7 +17,7 @@ public abstract class Item : ActionHandler
     {
     }
 
-    public Item((float, float) pos, GameObject prefab, Tilemap map = null)
+    public Item((float, float) pos, GameObject prefab, bool isSolid = false, Tilemap map = null)
     {
         if (map == null)
         {
@@ -25,8 +25,22 @@ public abstract class Item : ActionHandler
         }
         this.Prefab = prefab;
         this.prefabName = Prefab.name;
+        this.IsSolid = isSolid;
         InsertAtPosition(map, pos, false);
+        this.Id = GCon.game.IdItems++;
+        GCon.game.Items.Add(Id, this);
         SetupItem();
+    }
+
+    // Angle where the character is "looking" (for picture, shooting and stuff)
+    private float angle;
+    public float Angle
+    {
+        get => angle;
+        set
+        {
+            angle = (float)(value % (Math.PI * 2));
+        }
     }
     //Don't use this X, Y and other GameObject parameters for the game itself - use it only for saving and loading the game
     [JsonProperty]
@@ -34,13 +48,15 @@ public abstract class Item : ActionHandler
     [JsonProperty]
     private float y;
     [JsonProperty]
-    public float Rotation { get; set; }
-    [JsonProperty]
     private string tilemapName;
     [JsonProperty]
     private string prefabName;
+    [JsonProperty]
+    public bool IsSolid { get; set; }
     [JsonIgnore]
     public GameObject Prefab { get; private set; }
+    [JsonIgnore]
+    protected Rigidbody2D rb;
 
     /// <summary>
     /// Whether to delete this Item when player leave the room
@@ -53,11 +69,10 @@ public abstract class Item : ActionHandler
         Prefab.SetActive(false);
         x = pos.Item2;
         y = pos.Item1;
-        if (loadAssign)
-            Prefab.transform.position = new Vector3(x, y);
+        if (loadAssign || GCon.gameStarted)
+            Prefab.transform.position = new Vector3(x, y, Prefab.transform.position.z);
         else
-            Prefab.transform.position = map.WorldToCell(new Vector3(x, y));
-        this.Id = this.Prefab.GetInstanceID();
+            Prefab.transform.position = map.WorldToCell(new Vector3(x, y, Prefab.transform.position.z));
         this.tilemapName = map.name;
         return Prefab;
     }
@@ -86,31 +101,33 @@ public abstract class Item : ActionHandler
     /// </summary>
     protected virtual void SetupItem()
     {
-        GCon.game.Items.Add(Id, this);
-        Rigidbody2D rb = Prefab.AddComponent<Rigidbody2D>();
+        rb = Prefab.AddComponent<Rigidbody2D>();
         rb.simulated = true;
         rb.gravityScale = 0;
+        rb.freezeRotation = true;
+        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+        Prefab.GetComponent<Collider2D>().isTrigger = !IsSolid;
         ItemScript script = Prefab.AddComponent<ItemScript>();
         script.item = this;
     }
 
-    public virtual void Dispose()
+    public override void Dispose()
     {
+        base.Dispose();
         GCon.game.Items.Remove(this.Id);
         GCon.game.CurLevel.Items.Remove(this.Id);
-        if (GCon.game.ItemsStep.ContainsKey(Id))
-        {
-            GCon.game.ItemsStep.Remove(Id);
-        }
-
         UnityEngine.Object.Destroy(this.Prefab);
     }
 
     public virtual void OnCollisionEnter(Item collider)
     {
+        if (!GCon.gameStarted)
+            return;
     }
     public virtual void OnCollisionLeave(Item collider)
     {
+        if (!GCon.gameStarted)
+            return;
     }
     public virtual void OnLevelEnter()
     {

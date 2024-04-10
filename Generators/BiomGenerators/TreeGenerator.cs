@@ -35,7 +35,7 @@ public class TreeGenerator : IBiomGenerator
 
     override public Dictionary<int, Level> GenerateBiom(Biom biom, GameControl gameControlReference)
     {
-        int currentId = gameControlReference.Id;
+        int currentId = gameControlReference.IdLevels;
         Dictionary<int, Level> levels = new Dictionary<int, Level>();
         //just for checking the lattice (if dead end happens, algo will pop levelStructures untill it can continue.
         List<LevelStructure> levelStructures = new List<LevelStructure>();
@@ -70,7 +70,7 @@ public class TreeGenerator : IBiomGenerator
         var arr = levelStructures.ToArray();
         for (int i = 0; i < arr.Length; i++)
         {
-            levels.Add(gameControlReference.Id, CreateLevel(ToolsMath.GetRandomElement<ILevelGenerator>(levelGenerators), gameControlReference, biom, arr[arr.Length - 1 - i].cellWidth * cellSize, arr[arr.Length - 1 - i].cellHeight * cellSize, arr[arr.Length - 1 - i].ExitsAr));
+            levels.Add(gameControlReference.IdLevels, CreateLevel(ToolsMath.GetRandomElement<ILevelGenerator>(levelGenerators), gameControlReference, biom, arr[arr.Length - 1 - i].cellWidth * cellSize, arr[arr.Length - 1 - i].cellHeight * cellSize, arr[arr.Length - 1 - i].ExitsAr));
         }
         return levels;
     }

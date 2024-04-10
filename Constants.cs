@@ -2,7 +2,7 @@
 
 public static class Constants
 {
-    //const float TIME = Time.fixedDeltaTime;
-
+    //to set values to zeroes when they are smaller than this
+    public const float MIN_VALUE = 0.0001f;
 
 }

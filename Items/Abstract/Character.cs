@@ -27,13 +27,22 @@ public abstract class Character : Movable
         }
     }
     public Character() { }
-    public Character((float, float) pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float lives, GameObject prefab, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, map)
+    public Character((float, float) pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isSolid = true, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, isSolid, map)
     {
         this.CharDamage = charDamage;
         this.CharReloadTime = charReloadTime;
         this.Weapon = weapon;
         Lives = lives;
         CharShotSpeed = charShotSpeed;
+        CharShotDuration = charShotDuration;
+    }
+    protected override void SetupItem()
+    {
+        if (Weapon != null)
+        {
+            this.Weapon.SetupWeapon();
+        }
+        base.SetupItem();
     }
 }
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using UnityEngine;
 
 /// <summary>
 /// Movement composed of multiple movements with preset speed. Speeds of partial movements will determine the direction
@@ -14,7 +15,7 @@ public class CompositeMovement : IMovement
     [JsonProperty]
     private IMovement thisMovement;
     [JsonProperty]
-    private Dictionary<string, IMovement> partialMovements = new Dictionary<string, IMovement>();
+    public Dictionary<string, IMovement> partialMovements = new Dictionary<string, IMovement>();
     /// <summary>
     /// 
     /// </summary>
@@ -27,7 +28,7 @@ public class CompositeMovement : IMovement
     }
     public CompositeMovement() : base() { }
 
-    public override bool Frame(double friction)
+    public override bool Frame(float friction)
     {
         foreach (IMovement movement in partialMovements.Values)
         {
@@ -52,10 +53,7 @@ public class CompositeMovement : IMovement
         return (yout * x / y, yout);
     }
 
-    public override void ResetMovementAngle(double angle)
-    {
-    }
-    public override void ResetMovementSpeed(double speed)
+    public override void ResetMovementAngle(float angle)
     {
     }
     public override void UpdateMovement()

@@ -17,7 +17,11 @@ public class GameControl
     /// <summary>
     /// Increasing id to be assigned for levels during creation
     /// </summary>
-    public int Id { get; set; } = 0;
+    public int IdLevels { get; set; } = 0;
+    /// <summary>
+    /// Increasing id to be assigned for levels during creation
+    /// </summary>
+    public int IdItems { get; set; } = 0;
     public long Now { get; set; } = 0;
     public Dictionary<BiomType, Biom> bioms = new Dictionary<BiomType, Biom>();//{ { BiomType.meadow, new Biom("none", BiomType.meadow, 5, 2, new LinearGenerator()) } };
 
@@ -28,7 +32,7 @@ public class GameControl
     /// <summary>
     /// List of items for which will be called update (e. g. Exits are not here)
     /// </summary>
-    public Dictionary<int, Item> ItemsStep { get; set; } = new Dictionary<int, Item>();
+    public Dictionary<int, ActionHandler> ItemsStep { get; set; } = new Dictionary<int, ActionHandler>();
     public Biom CurBiom { get; set; }
     
     public Level CurLevel { get; set; }

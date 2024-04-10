@@ -34,6 +34,7 @@ public class Level : ExitHandler
 
     public void AddItem(Item item)
     {
+        item.Prefab.SetActive(true);
         Items.Add(item.Id, item);
     }
 
