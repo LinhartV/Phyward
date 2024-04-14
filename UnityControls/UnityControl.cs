@@ -27,15 +27,22 @@ public class UnityControl : MonoBehaviour
     [SerializeField]
     private GameObject blueShot;
     [SerializeField]
+    private GameObject redSmallShot;
+    [SerializeField]
+    private GameObject fireSwarmShot;
+    [SerializeField]
     private GameObject player;
     [SerializeField]
     public GameObject exit;
+    [SerializeField]
+    public GameObject time;
+    [SerializeField]
+    public GameObject timeEnemy;
     // Start is called before the first frame update
     void Start()
     {
-
         ToolsGame.SetupGame();
-        GameObjects.SetPrefabs(exit, empty, player, blueShot, solidMap);
+        GameObjects.SetPrefabs(timeEnemy, time, redSmallShot, fireSwarmShot, exit, empty, player, blueShot, solidMap);
         ToolsSystem.StartGame("Try");
         GCon.game.Player.Prefab.SetActive(true);
         BuildLevel(GCon.game.CurLevel, null);

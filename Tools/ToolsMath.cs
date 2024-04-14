@@ -28,7 +28,7 @@ public static class ToolsMath
         return (x, y);
     }
     /// <summary>
-    /// Changes width and length to polar coordinates
+    /// Changes width and distance to polar coordinates
     /// </summary>
     /// <returns>(angle, size)</returns>
     public static (float, float) CartesianToPolar(float width, float height)

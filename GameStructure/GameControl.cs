@@ -24,7 +24,7 @@ public class GameControl
     public int IdItems { get; set; } = 0;
     public long Now { get; set; } = 0;
     public Dictionary<BiomType, Biom> bioms = new Dictionary<BiomType, Biom>();//{ { BiomType.meadow, new Biom("none", BiomType.meadow, 5, 2, new LinearGenerator()) } };
-
+    public PlayerControl PlayerControl { get; private set; } = new PlayerControl(true);
     /// <summary>
     /// List of all items in the game
     /// </summary>
