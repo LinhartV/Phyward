@@ -23,7 +23,7 @@ public static class Units
     public static PreUnit voltage = new PreUnit("Napětí", "Rozdíl elektrického potenciálu mezi dvěma body...", "volt [V]", new List<PreUnit>() { power }, new List<PreUnit>() { current });
     public static PreUnit resistance = new PreUnit("Odpor", "Udává, jak moc se prostředí brání proti vedení proudu", "ohm [Ω]", new List<PreUnit>() { voltage }, new List<PreUnit>() { current });
     public static PreUnit charge = new PreUnit("Náboj", "Jak moc je něco nabité... vím, skvělé vysvětlení... ", "coulomb [C]", new List<PreUnit>() { time, current }, new List<PreUnit>() { });
-    public static PreUnit capacitance = new PreUnit("Capacita", "Udává schopnost udržet si náboj... na způsob 'nabít, pal!' ", "farad [F]", new List<PreUnit>() { charge }, new List<PreUnit>() { voltage });
+    public static PreUnit capacitance = new PreUnit("Kapacita", "Udává schopnost udržet si náboj... na způsob 'nabít, pal!' ", "farad [F]", new List<PreUnit>() { charge }, new List<PreUnit>() { voltage });
     public static PreUnit area = new PreUnit("Obsah", "Velikost nějaké plochy", "[m^2]", new List<PreUnit>() { distance, distance }, new List<PreUnit>() { });
     public static PreUnit volume = new PreUnit("Objem", "Velikost tělesa", "[m^3]", new List<PreUnit>() { distance, distance, distance }, new List<PreUnit>() { });
     public static PreUnit density = new PreUnit("Hustota", "Kolik váží metr krychlový dané látky", "[kg/m^3]", new List<PreUnit>() { mass }, new List<PreUnit>() { volume });

@@ -29,12 +29,13 @@ public class Level : ExitHandler
         Id = id;
         this.ExitsAr = exits;
         Maze = generator.GenerateLevel(width, height, exits, out emptyPos, this);
+        generator.SpawnItems(this);
         //AddItem(GCon.game.Player);
     }
 
     public void AddItem(Item item)
     {
-        item.Prefab.SetActive(true);
+        item.Prefab.SetActive(GCon.game.CurLevel == this && GCon.gameStarted);
         Items.Add(item.Id, item);
     }
 
@@ -64,5 +65,9 @@ public class Level : ExitHandler
         return position;
     }
 
+    public void OnEnter()
+    {
+
+    }
 
 }

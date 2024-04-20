@@ -13,13 +13,8 @@ using UnityEngine.UIElements;
 /// </summary>
 public class BlockInsert : ILevelGenerator
 {
-    private List<(int, int)> finalEmptyPos = new List<(int, int)>();
-    private MazeTile[,] maze;
-    private double blockCountPercentage;
-
-    public BlockInsert(double algoStrength)
+    public BlockInsert(double algoStrength, params ISpawner[] spawners) : base(algoStrength, spawners)
     {
-        this.blockCountPercentage = algoStrength;
     }
 
     /// <summary>

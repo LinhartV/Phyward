@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-
+/// <summary>
+/// Physic unit - used for crafting
+/// </summary>
 [Serializable]
-public class PreUnit
+public class PreUnit : Slotable
 {
     public PreUnit()
     {

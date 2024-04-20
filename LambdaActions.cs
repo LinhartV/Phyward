@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,30 +12,39 @@ using static UnityEngine.RuleTile.TilingRuleOutput;
 /// </summary>
 public static class LambdaActions
 {
-    delegate void LambdaAction(ActionHandler item, params object[] parameters);
+    public delegate void LambdaAction(ActionHandler item, params object[] parameters);
     /// <summary>
     /// Dictionary of actions. Key - name, Value - Action(gvars, id of item)
     /// </summary>
-    private static Dictionary<string, LambdaAction> lambdaActions = new();
+    public static Dictionary<string, LambdaAction> lambdaActions = new();
 
 
     public static void SetupLambdaActions()
     {
+
+        lambdaActions.Add("randomWalk", (item, parameter) =>
+        {
+            if ((item as Movable).MovementsControlled["randomMovement"].MovementSpeed == 0)
+            {
+                (item as Movable).MovementsControlled["randomMovement"].ResetMovementSpeed((item as Movable).BaseSpeed / 4);
+                (item as Movable).RotateControlledMovement("randomMovement", (float)(ToolsGame.Rng() * Math.PI * 2));
+            }
+        });
         lambdaActions.Add("up", (item, parameter) =>
         {
-            (item as Movable).UpdateControlledMovement("up");
+            (item as Movable).UpdateCompositeMovement("movement", "up");
         });
         lambdaActions.Add("down", (item, parameter) =>
         {
-            (item as Movable).UpdateControlledMovement("down");
+            (item as Movable).UpdateCompositeMovement("movement", "down");
         });
         lambdaActions.Add("left", (item, parameter) =>
         {
-            (item as Movable).UpdateControlledMovement("left");
+            (item as Movable).UpdateCompositeMovement("movement", "left");
         });
         lambdaActions.Add("right", (item, parameter) =>
         {
-            (item as Movable).UpdateControlledMovement("right");
+            (item as Movable).UpdateCompositeMovement("movement", "right");
         });
         //Rotate to face pointer
         lambdaActions.Add("faceCursor", (item, parameter) =>
@@ -65,6 +75,14 @@ public static class LambdaActions
         {
             item.Dispose();
         });
+        lambdaActions.Add("faceInDirection", (item, parameter) =>
+        {
+            if (!((item is Movable m) && m.SetAngle && m.GetMovementSpeed() == 0))
+            {
+                var angle = ToolsMath.PolarToCartesian((item as Item).Angle, 1);
+                (item as Item).Prefab.GetComponentInChildren<SpriteRenderer>().transform.up = new Vector2(angle.Item1, angle.Item2);
+            }
+        });
     }
     public static void ExecuteAction(string actionName, ActionHandler item, params object[] parameters)
     {
@@ -72,6 +90,7 @@ public static class LambdaActions
         {
             lambdaActions[actionName].Invoke(item, parameters);
         }
+
     }
 }
 

@@ -47,6 +47,7 @@ public class ItemAction
     [JsonProperty]
     private double repeat;
     public ExecutionType executionType;
+    public OnLeaveType onLeaveType;
     /// <summary>
     /// Creates ItemAction - any possible action can be assigned to item
     /// </summary>
@@ -60,6 +61,7 @@ public class ItemAction
         Repeat = repeat;
         this.executionType = executionType;
         this.Parameters = parameters;
+        this.onLeaveType = onLeaveType;
     }
 
     public double Repeat

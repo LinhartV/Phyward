@@ -11,7 +11,7 @@ public class ConstantMovement : IMovement
 {
     [JsonProperty]
     private int stopMovement = 0;
-    public ConstantMovement(float movementSpeed, float angle) : base(movementSpeed, angle)
+    public ConstantMovement(float movementSpeed, float angle, bool keepUpdated = false) : base(movementSpeed, angle, keepUpdated)
     {
         baseSpeed = movementSpeed;
     }
@@ -19,6 +19,7 @@ public class ConstantMovement : IMovement
 
     public override bool Frame(float friction)
     {
+        base.Frame(friction);
         bool stopped;
         stopMovement++;
         if (stopMovement > 1)

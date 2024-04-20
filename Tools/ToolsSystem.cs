@@ -1,4 +1,5 @@
-﻿
+﻿//#define LOAD
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,6 +26,8 @@ public static class ToolsSystem
         ReferenceLoopHandling = ReferenceLoopHandling.Serialize,
         ContractResolver = new PrivateSetterContractResolver()
     };
+
+
     /// <summary>
     /// Loads game from save file or creates new when file is not found.
     /// </summary>
@@ -95,6 +98,7 @@ public static class ToolsSystem
     /// <returns>If load was successfull</returns>
     public static bool LoadGame(string playerName, out GameControl game)
     {
+#if LOAD
         string destination = "./SavedGames/" + playerName + ".json";
         string jsonString;
 
@@ -125,6 +129,10 @@ public static class ToolsSystem
         finally
         {
         }
+#else
+        game = null;
+        return false;
+#endif
     }
 
     public static bool ScrambledEquals<T>(IEnumerable<T> list1, IEnumerable<T> list2)
@@ -154,6 +162,7 @@ public static class ToolsSystem
         }
         return cnt.Values.All(c => c == 0);
     }
+
 
     /*
     public class BaseSpecifiedConcreteClassConverter : DefaultContractResolver

@@ -11,30 +11,39 @@ public class AcceleratedMovement : IMovement
 {
     [JsonProperty]
     public float Acceleration { get; set; }
+    [JsonProperty]
+    private float frictionCoef;
     /// <summary>
-    /// Movement constantly slowing by friction but accelerates when updated
+    /// Movement constantly slowing by friction but accelerates when updated - rotation sets new angle (ignoring the fact that it should accelerate to that angle - it rotates instantly)
     /// </summary>
-    public AcceleratedMovement(float initialSpeed, float angle, float acceleration, float maxSpeed) : base(initialSpeed, angle)
+    public AcceleratedMovement(float initialSpeed, float angle, float acceleration, float maxSpeed, float frictionCoef = 1, bool keepUpdated = false) : base(initialSpeed, angle, keepUpdated)
     {
         this.Acceleration = acceleration;
         this.baseSpeed = maxSpeed;
+        this.frictionCoef = frictionCoef;
     }
     /// <summary>
     /// Only slowing movement
     /// </summary>
-    public AcceleratedMovement(float initialSpeed, float angle) : base(initialSpeed, angle)
+    public AcceleratedMovement(float initialSpeed, float angle, float frictionCoef = 1, bool keepUpdated = false) : base(initialSpeed, angle, keepUpdated)
     {
         this.Acceleration = 0;
         this.baseSpeed = initialSpeed;
+        this.frictionCoef = frictionCoef;
     }
     public AcceleratedMovement() : base() { }
 
     public override bool Frame(float friction)
     {
+        base.Frame(friction);
         bool stopped;
         if (this.MovementSpeed > 0.0005)
         {
-            MovementSpeed -= friction * GCon.percentageOfFrame;
+            MovementSpeed -= friction * frictionCoef * GCon.percentageOfFrame;
+            if (MovementSpeed < 0)
+            {
+                MovementSpeed = 0;
+            }
             stopped = false;
         }
         else
@@ -57,14 +66,30 @@ public class AcceleratedMovement : IMovement
 
     public override void UpdateMovement()
     {
-        if (MovementSpeed < baseSpeed)
+        if (!isUpdated)
         {
-            MovementSpeed += Acceleration * GCon.percentageOfFrame;
-        }
-        else
-        {
-            MovementSpeed = baseSpeed;
+            isUpdated = true;
+            if (MovementSpeed < baseSpeed)
+            {
+                MovementSpeed += Acceleration * GCon.percentageOfFrame;
+            }
+            else
+            {
+                MovementSpeed = baseSpeed;
+            }
         }
     }
+    /// <summary>
+    /// Sets current movement speed and if it's higher than max speed, it updates max speed as well
+    /// </summary>
+    public override void ResetMovementSpeed(float speed)
+    {
+        MovementSpeed = speed;
+        if (baseSpeed < speed)
+        {
+            baseSpeed = speed;
+        }
+    }
+
 }
 

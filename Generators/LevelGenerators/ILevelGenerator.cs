@@ -8,6 +8,24 @@ using static ToolsGame;
 
 public abstract class ILevelGenerator
 {
+    protected List<(int, int)> finalEmptyPos = new List<(int, int)>();
+    protected MazeTile[,] maze;
+    protected double blockCountPercentage;
+    protected ISpawner[] spawners;
+    protected ILevelGenerator(double algoStrength, params ISpawner[] spawners)
+    {
+        this.blockCountPercentage = algoStrength;
+        this.spawners = spawners;
+    }
+
+    public void SpawnItems(Level level)
+    {
+        foreach (var spawner in spawners)
+        {
+            spawner.Spawn(level);
+        }
+    }
+
     /// <summary>
     /// Generates a new level of certain width and height
     /// </summary>

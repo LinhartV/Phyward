@@ -8,6 +8,24 @@ using static ToolsGame;
 
 public abstract class IBiomGenerator
 {
+    protected ILevelGenerator[] levelGenerators;
+    protected int levelCount;
+    protected int cellSize;
+    protected double probabilityOfLargerCell;
+    protected int maxLevelSize;
+    protected bool keepLinear;
+    protected IBiomGenerator(int levelCount, int cellSize, double probabilityOfLargerCell, bool keepLinear, int maxLevelSize, ILevelGenerator levelGenerator, params ILevelGenerator[] levelGenerators)
+    {
+        var list = levelGenerators.ToList();
+        list.Add(levelGenerator);
+        this.levelGenerators = list.ToArray();
+        this.levelCount = levelCount;
+        this.cellSize = cellSize;
+        this.maxLevelSize = maxLevelSize;
+        this.probabilityOfLargerCell = probabilityOfLargerCell;
+        this.keepLinear = keepLinear;
+    }
+
     protected class LevelStructure : ExitHandler
     {
         public int x;
@@ -34,7 +52,7 @@ public abstract class IBiomGenerator
     /// <param name="biom">Reference to biom itself</param>
     /// <param name="maxSize">Maximal size of level (how many level cells the level can contain)</param>
     /// <returns></returns>
-    public abstract Dictionary<int, Level> GenerateBiom(Biom biom, GameControl gameControlReference);
+    public abstract Dictionary<int, Level> GenerateBiom(Biom biom);
     /// <summary>
     /// Creates a level for this biom
     /// </summary>
@@ -43,10 +61,10 @@ public abstract class IBiomGenerator
     /// <param name="gameControlReference"></param>
     /// <param name="exits">How many exits are on each side (up, right, down, left)</param>
     /// <returns></returns>
-    protected Level CreateLevel(ILevelGenerator generator, GameControl gameControlReference, Biom biom, int width, int height, List<PreExit>[] exits)
+    protected Level CreateLevel(ILevelGenerator generator, Biom biom, int width, int height, List<PreExit>[] exits)
     {
-        var lvl = new Level(gameControlReference.IdLevels++, generator, width, height, exits);
-        biom.levels.Add(gameControlReference.IdLevels, lvl);
+        var lvl = new Level(GCon.game.IdLevels++, generator, width, height, exits);
+        biom.levels.Add(GCon.game.IdLevels, lvl);
         return lvl;
 
     }

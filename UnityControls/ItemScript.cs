@@ -16,23 +16,39 @@ public class ItemScript : MonoBehaviour
     }*/
     private void FixedUpdate()
     {
-        
+
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        int collisionId = collision.gameObject.GetComponent<ItemScript>().item.Id;
-        if (GCon.game.Items.ContainsKey(collisionId))
-            item.OnCollisionEnter(GCon.game.Items[collisionId]);
-        else
-            item.OnCollisionEnter(new Block());
-
+        if (item != null && collision != null)
+        {
+            ItemScript scr;
+            if (collision.gameObject.transform.parent == null)
+            {
+                if (collision.gameObject.TryGetComponent<ItemScript>(out scr) && GCon.game.Items.ContainsKey(scr.item.Id))
+                    item.OnCollisionEnter(GCon.game.Items[scr.item.Id]);
+                else
+                    item.OnCollisionEnter(new Block());
+            }
+            else
+            {
+                scr = collision.gameObject.GetComponentInParent<ItemScript>();
+                if (scr != null && GCon.game.Items.ContainsKey(scr.item.Id))
+                    item.OnCollisionEnter(GCon.game.Items[scr.item.Id]);
+                else
+                    item.OnCollisionEnter(new Block());
+            }
+        }
     }
     private void OnTriggerExit2D(Collider2D collision)
     {
-        int collisionId = collision.gameObject.GetComponent<ItemScript>().item.Id;
-        if (GCon.game.Items.ContainsKey(collisionId))
-            item.OnCollisionLeave(GCon.game.Items[collisionId]);
-        else
-            item.OnCollisionLeave(new Block());
+        if (item != null && collision != null)
+        {
+            ItemScript scr;
+            if (collision.gameObject.TryGetComponent<ItemScript>(out scr) && GCon.game.Items.ContainsKey(scr.item.Id))
+                item.OnCollisionLeave(GCon.game.Items[scr.item.Id]);
+            else
+                item.OnCollisionLeave(new Block());
+        }
     }
 }

@@ -17,7 +17,8 @@ internal class BasicWeapon : IWeapon
 
     public override void Fire()
     {
-        base.Fire(new BasicShot((Character.Prefab.transform.position.y, Character.Prefab.transform.position.x), Character.Id, ShotDuration * Character.CharShotDuration, ShotSpeed * Character.CharShotSpeed, ShotSpeed * Character.CharShotSpeed, 0, 0, GameObjects.blueShot));
+        base.Fire(new BasicShot((Character.Prefab.transform.position.y, Character.Prefab.transform.position.x), Character.Id, ShotDuration * Character.CharShotDuration, ShotSpeed * Character.CharShotSpeed, ShotSpeed * Character.CharShotSpeed, 0, 0, 0.1f, this.shotPrefab));
+
     }
 }
 

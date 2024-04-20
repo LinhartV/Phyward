@@ -28,7 +28,7 @@ public static class ToolsMath
         return (x, y);
     }
     /// <summary>
-    /// Changes width and distance to polar coordinates
+    /// Changes width and height to polar coordinates
     /// </summary>
     /// <returns>(angle, size)</returns>
     public static (float, float) CartesianToPolar(float width, float height)
@@ -38,6 +38,16 @@ public static class ToolsMath
     static public float GetAngleFromLengts(Item it1, Item it2)
     {
         return GetAngleFromLengts(it2.Prefab.transform.position.x - it1.Prefab.transform.position.x, it2.Prefab.transform.position.y - it1.Prefab.transform.position.y);
+    }
+    /// <summary>
+    /// Get angle between two items
+    /// </summary>
+    /// <param name="it1">"him"</param>
+    /// <param name="it2">"me"</param>
+    /// <returns></returns>
+    static public float GetDistance(Item it1, Item it2)
+    {
+        return (float)Math.Sqrt(Math.Pow(it1.Prefab.transform.position.x - it2.Prefab.transform.position.x, 2) + Math.Pow(it1.Prefab.transform.position.y - it2.Prefab.transform.position.y, 2));
     }
     static public float GetAngleFromLengts(float xlength, float ylength)
     {
@@ -57,5 +67,12 @@ public static class ToolsMath
         else if (xlength <= 0 && ylength >= 0)
             newAngle = (float)(2 * Math.PI - newAngle);
         return newAngle;
+    }
+    /// <summary>
+    /// Converts seconds to frames
+    /// </summary>
+    public static float SecondsToFrames(float seconds)
+    {
+        return seconds / GCon.percentageOfFrame;
     }
 }

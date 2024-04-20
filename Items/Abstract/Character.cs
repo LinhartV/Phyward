@@ -10,6 +10,7 @@ using UnityEngine.Tilemaps;
 public abstract class Character : Movable
 {
     //Coeficients modifying weapon
+    public bool IsFriendly { get; private set; }
     public float CharDamage { get; set; }
     public float CharShotSpeed { get; set; }
     public float CharShotDuration { get; set; }
@@ -23,12 +24,16 @@ public abstract class Character : Movable
         set
         {
             weapon = value;
-            weapon.Character = this;
+            if (weapon != null)
+            {
+                weapon.Character = this;
+            }
         }
     }
     public Character() { }
-    public Character((float, float) pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isSolid = true, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, isSolid, map)
+    public Character((float, float) pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isFriendly, bool isSolid, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, isSolid, map)
     {
+        this.IsFriendly = isFriendly;
         this.CharDamage = charDamage;
         this.CharReloadTime = charReloadTime;
         this.Weapon = weapon;
@@ -36,6 +41,18 @@ public abstract class Character : Movable
         CharShotSpeed = charShotSpeed;
         CharShotDuration = charShotDuration;
     }
+
+    protected Character(float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isFriendly, bool isSolid) : base(baseSpeed, acceleration, friction, prefab, isSolid)
+    {
+        this.IsFriendly = isFriendly;
+        this.CharDamage = charDamage;
+        this.CharReloadTime = charReloadTime;
+        this.Weapon = weapon;
+        Lives = lives;
+        CharShotSpeed = charShotSpeed;
+        CharShotDuration = charShotDuration;
+    }
+
     protected override void SetupItem()
     {
         if (Weapon != null)
@@ -43,6 +60,11 @@ public abstract class Character : Movable
             this.Weapon.SetupWeapon();
         }
         base.SetupItem();
+    }
+    public override void OnCollisionEnter(Item collider)
+    {
+        base.OnCollisionEnter(collider);
+        // if (collider is Shot s && s.) { }
     }
 }
 

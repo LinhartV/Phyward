@@ -64,7 +64,7 @@ public abstract class Movable : Item
             }
         }
     }
-    //Movements once set and controlled just by the movement itself. It deletes itself when speed is 0. (e.g. shot speed)
+    //Movements once set and controlled just by the movement itself. It deletes itself when speed is 0. (e.g. shot speed).
     [JsonProperty]
     public List<IMovement> MovementsAutomated { get; set; } = new List<IMovement>();
     //Movements controlled by other actions, such as player control. Accesed by id and not deleted even when speed is 0.
@@ -82,7 +82,17 @@ public abstract class Movable : Item
         this.BaseSpeed = baseSpeed;
         this.acceleration = acceleration;
         this.friction = friction;
+        this.AddAction(new ItemAction("faceInDirection", 1, ItemAction.ExecutionType.EveryTime));
     }
+
+    protected Movable(float baseSpeed, float acceleration, float friction, GameObject prefab, bool isSolid = false) : base(prefab, isSolid)
+    {
+        this.BaseSpeed = baseSpeed;
+        this.acceleration = acceleration;
+        this.friction = friction;
+        this.AddAction(new ItemAction("faceInDirection", 1, ItemAction.ExecutionType.EveryTime));
+    }
+
     public override void SaveItem()
     {
         xVelocity = rb.velocity.x;
@@ -94,6 +104,9 @@ public abstract class Movable : Item
         base.SetupItem();
         this.rb.velocity = new Vector2(xVelocity, yVelocity);
     }
+    /// <summary>
+    /// To communicate with unity rigidbody speed system (don't use elsewhere)
+    /// </summary>
     public void CorrectSpeed()
     {
         List<IMovement> allMovements = new List<IMovement>(MovementsAutomated);
@@ -106,6 +119,9 @@ public abstract class Movable : Item
             }
         }
     }
+
+
+
     /// <summary>
     /// Move the current object based on it's movements
     /// </summary>
@@ -113,12 +129,16 @@ public abstract class Movable : Item
     {
         List<IMovement> allMovements = new List<IMovement>(MovementsAutomated);
         allMovements.AddRange(MovementsControlled.Values);
-        
+
         (float, float) xy;
         float x = 0;
         float y = 0;
         foreach (var movement in allMovements)
         {
+            if (MovementsAutomated.Contains(movement) && movement.KeepUpdated)
+            {
+                movement.UpdateMovement();
+            }
             if (movement.Frame(friction) && MovementsAutomated.Contains(movement))
             {
                 MovementsAutomated.Remove(movement);
@@ -136,6 +156,21 @@ public abstract class Movable : Item
         }
         prevVelocity = rb.velocity;
     }
+    /// <summary>
+    /// Gets an angle where the item is moving
+    /// </summary>
+    public float GetMovementAngle()
+    {
+        return ToolsMath.GetAngleFromLengts(prevVelocity.x, prevVelocity.y);
+    }
+    /// <summary>
+    /// Gets a magnitude of movement vector
+    /// </summary>
+    public float GetMovementSpeed()
+    {
+        return prevVelocity.magnitude;
+    }
+
     /// <summary>
     /// Creates new movement which is controlled only by movement itself (deletes itself when 0)
     /// </summary>
@@ -185,9 +220,21 @@ public abstract class Movable : Item
         if (MovementsControlled.ContainsKey(movementName))
         {
             if (rotate)
-                MovementsControlled[movementName].Angle -= angleRotation;
+                MovementsControlled[movementName].ResetMovementAngle(MovementsControlled[movementName].Angle - angleRotation);
             else
                 MovementsControlled[movementName].ResetMovementAngle(angleRotation);
+        }
+    }
+
+    public void StopAll()
+    {
+        foreach (var movement in MovementsAutomated)
+        {
+            movement.SuddenStop();
+        }
+        foreach (var movement in MovementsAutomated)
+        {
+            movement.SuddenStop();
         }
     }
 }

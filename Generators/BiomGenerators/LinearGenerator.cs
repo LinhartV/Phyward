@@ -12,28 +12,13 @@ using UnityEngine;
 /// </summary>
 public class LinearGenerator : IBiomGenerator
 {
-   
-    private ILevelGenerator[] levelGenerators;
-    private int levelCount;
-    private int cellSize;
-    private double probabilityOfLargerCell;
-    private int maxLevelSize;
-    private bool keepLinear;
-    public LinearGenerator(int levelCount, int cellSize, double probabilityOfLargerCell, bool keepLinear, int maxLevelSize, ILevelGenerator levelGenerator, params ILevelGenerator[] levelGenerators)
+    public LinearGenerator(int levelCount, int cellSize, double probabilityOfLargerCell, bool keepLinear, int maxLevelSize, ILevelGenerator levelGenerator, params ILevelGenerator[] levelGenerators) : base(levelCount, cellSize, probabilityOfLargerCell, keepLinear, maxLevelSize, levelGenerator, levelGenerators)
     {
-        var list = levelGenerators.ToList();
-        list.Add(levelGenerator);
-        this.levelGenerators = list.ToArray();
-        this.levelCount = levelCount;
-        this.cellSize = cellSize;
-        this.maxLevelSize = maxLevelSize;
-        this.probabilityOfLargerCell = probabilityOfLargerCell;
-        this.keepLinear = keepLinear;
     }
 
-    override public Dictionary<int, Level> GenerateBiom(Biom biom, GameControl gameControlReference)
+    override public Dictionary<int, Level> GenerateBiom(Biom biom)
     {
-        int currentId = gameControlReference.IdLevels;
+        int currentId = GCon.game.IdLevels;
         Dictionary<int, Level> levels = new Dictionary<int, Level>();
         //real level structure that will be converted to level
         Stack<LevelStructure> levelStructures = new Stack<LevelStructure>();
@@ -92,7 +77,7 @@ public class LinearGenerator : IBiomGenerator
         var arr = levelStructures.ToArray();
         for (int i = 0; i < arr.Length; i++)
         {
-            levels.Add(gameControlReference.IdLevels, CreateLevel(ToolsMath.GetRandomElement<ILevelGenerator>(levelGenerators), gameControlReference, biom, arr[arr.Length - 1 - i].cellWidth * cellSize, arr[arr.Length - 1 - i].cellHeight * cellSize, arr[arr.Length - 1 - i].ExitsAr));
+            levels.Add(GCon.game.IdLevels, CreateLevel(ToolsMath.GetRandomElement<ILevelGenerator>(levelGenerators), biom, arr[arr.Length - 1 - i].cellWidth * cellSize, arr[arr.Length - 1 - i].cellHeight * cellSize, arr[arr.Length - 1 - i].ExitsAr));
         }
         return levels;
     }

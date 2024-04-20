@@ -12,30 +12,13 @@ using UnityEngine;
 /// </summary>
 public class TreeGenerator : IBiomGenerator
 {
-
-    private ILevelGenerator[] levelGenerators;
-    private int levelCount;
-    private int cellSize;
-    private double probabilityOfLargerCell;
-    private int maxLevelSize;
-    private bool keepLinear;
-    private double algoStrength;
-    public TreeGenerator(double algoStrength, int levelCount, int cellSize, double probabilityOfLargerCell, bool keepLinear, int maxLevelSize, ILevelGenerator levelGenerator, params ILevelGenerator[] levelGenerators)
+    public TreeGenerator(int levelCount, int cellSize, double probabilityOfLargerCell, bool keepLinear, int maxLevelSize, ILevelGenerator levelGenerator, params ILevelGenerator[] levelGenerators) : base(levelCount, cellSize, probabilityOfLargerCell, keepLinear, maxLevelSize, levelGenerator, levelGenerators)
     {
-        var list = levelGenerators.ToList();
-        list.Add(levelGenerator);
-        this.levelGenerators = list.ToArray();
-        this.levelCount = levelCount;
-        this.cellSize = cellSize;
-        this.maxLevelSize = maxLevelSize;
-        this.probabilityOfLargerCell = probabilityOfLargerCell;
-        this.keepLinear = keepLinear;
-        this.algoStrength = algoStrength;
     }
 
-    override public Dictionary<int, Level> GenerateBiom(Biom biom, GameControl gameControlReference)
+    override public Dictionary<int, Level> GenerateBiom(Biom biom)
     {
-        int currentId = gameControlReference.IdLevels;
+        int currentId = GCon.game.IdLevels;
         Dictionary<int, Level> levels = new Dictionary<int, Level>();
         //just for checking the lattice (if dead end happens, algo will pop levelStructures untill it can continue.
         List<LevelStructure> levelStructures = new List<LevelStructure>();
@@ -70,7 +53,7 @@ public class TreeGenerator : IBiomGenerator
         var arr = levelStructures.ToArray();
         for (int i = 0; i < arr.Length; i++)
         {
-            levels.Add(gameControlReference.IdLevels, CreateLevel(ToolsMath.GetRandomElement<ILevelGenerator>(levelGenerators), gameControlReference, biom, arr[arr.Length - 1 - i].cellWidth * cellSize, arr[arr.Length - 1 - i].cellHeight * cellSize, arr[arr.Length - 1 - i].ExitsAr));
+            levels.Add(GCon.game.IdLevels, CreateLevel(ToolsMath.GetRandomElement<ILevelGenerator>(levelGenerators), biom, arr[arr.Length - 1 - i].cellWidth * cellSize, arr[arr.Length - 1 - i].cellHeight * cellSize, arr[arr.Length - 1 - i].ExitsAr));
         }
         return levels;
     }

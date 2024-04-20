@@ -17,11 +17,11 @@ public class CompositeMovement : IMovement
     [JsonProperty]
     public Dictionary<string, IMovement> partialMovements = new Dictionary<string, IMovement>();
     /// <summary>
-    /// 
+    /// Movement composed of multiple movements with preset speed. Speeds of partial movements will determine the direction
     /// </summary>
     /// <param name="thisMovement">Movement, that will determine the speed (partial movements are just for direction)</param>
     /// <param name="movements">Partial movements which will set the direction of the final movement</param>
-    public CompositeMovement(IMovement thisMovement, Dictionary<string, IMovement> movements) : base(0, 0)
+    public CompositeMovement(IMovement thisMovement, Dictionary<string, IMovement> movements) : base(0, 0, false)
     {
         partialMovements = movements;
         this.thisMovement = thisMovement;
@@ -30,6 +30,7 @@ public class CompositeMovement : IMovement
 
     public override bool Frame(float friction)
     {
+        base.Frame(friction);
         foreach (IMovement movement in partialMovements.Values)
         {
             movement.Frame(friction);
@@ -39,7 +40,6 @@ public class CompositeMovement : IMovement
 
     public override (float, float) Move()
     {
-
         float x = 0;
         float y = 0;
         (float, float) xy;
@@ -47,10 +47,26 @@ public class CompositeMovement : IMovement
         {
             xy = movement.Move();
             x += xy.Item1;
-            y -= xy.Item2;
+            y += xy.Item2;
         }
-        float yout = (float)(thisMovement.MovementSpeed / Math.Sqrt((x * x / y * y) + 1));
-        return (yout * x / y, yout);
+        if (y != 0 && x != 0)
+        {
+            var del = Math.Sqrt(((x * x) / (y * y)) + 1);
+            float yout = (float)(thisMovement.MovementSpeed / del);
+            return (yout * x / Math.Abs(y), yout * Math.Abs(y) / y);
+        }
+        else if (x == 0 && y != 0)
+        {
+            return (0, thisMovement.MovementSpeed * Math.Abs(y) / y);
+        }
+        else if (x != 0 && y == 0)
+        {
+            return (thisMovement.MovementSpeed * Math.Abs(x) / x, 0);
+        }
+        else
+        {
+            return (0, 0);
+        }
     }
 
     public override void ResetMovementAngle(float angle)
@@ -58,7 +74,11 @@ public class CompositeMovement : IMovement
     }
     public override void UpdateMovement()
     {
-        thisMovement.UpdateMovement();
+        if (!isUpdated)
+        {
+            thisMovement.UpdateMovement();
+            isUpdated = true;
+        }
     }
     public void UpdateCompositeMovement(string name)
     {

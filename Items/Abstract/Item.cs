@@ -17,22 +17,28 @@ public abstract class Item : ActionHandler
     {
     }
 
-    public Item((float, float) pos, GameObject prefab, bool isSolid = false, Tilemap map = null)
+    public Item((float, float) pos, GameObject prefab, bool isSolid = false, Tilemap map = null) : base(true)
     {
-        if (map == null)
-        {
-            map = GameObjects.solidLayer;
-        }
-        this.Prefab = prefab;
-        this.prefabName = Prefab.name;
+        this.prefabName = prefab.name;
         this.IsSolid = isSolid;
-        InsertAtPosition(map, pos, false);
-        this.Id = GCon.game.IdItems++;
+        Prefab = UnityEngine.Object.Instantiate(prefab);
+        InsertAtPosition(pos, GCon.gameStarted, false, map);
         GCon.game.Items.Add(Id, this);
         SetupItem();
     }
+    public Item(GameObject prefab, bool isSolid = false) : base(true)
+    {
+        this.prefabName = prefab.name;
+        this.IsSolid = isSolid;
+        GCon.game.Items.Add(Id, this);
+        Prefab = UnityEngine.Object.Instantiate(prefab);
+        Prefab.SetActive(false);
+        SetupItem();
+    }
+
 
     // Angle where the character is "looking" (for picture, shooting and stuff)
+    [JsonProperty]
     private float angle;
     public float Angle
     {
@@ -63,36 +69,48 @@ public abstract class Item : ActionHandler
     /// </summary>
     public bool DeleteOnLeave { get; set; } = false;
 
-    private GameObject InsertAtPosition(Tilemap map, (float, float) pos, bool loadAssign = false)
+    public GameObject InsertAtPosition((float, float) pos, Tilemap map = null)
     {
-        Prefab = UnityEngine.Object.Instantiate(Prefab);
-        Prefab.SetActive(false);
+        return InsertAtPosition(pos, this.Prefab.activeInHierarchy, false, map);
+    }
+    public GameObject InsertAtPosition((float, float) pos, bool setActive, bool loadAssign = false, Tilemap map = null)
+    {
+        if (map == null)
+        {
+            map = GameObjects.solidLayer;
+        }
+        Prefab.SetActive(setActive);
         x = pos.Item2;
         y = pos.Item1;
         if (loadAssign || GCon.gameStarted)
             Prefab.transform.position = new Vector3(x, y, Prefab.transform.position.z);
         else
+        {
+            var z = Prefab.transform.position.z;
             Prefab.transform.position = map.WorldToCell(new Vector3(x, y, Prefab.transform.position.z));
+            Prefab.transform.position = new Vector3(Prefab.transform.position.x, Prefab.transform.position.y, z);
+        }
         this.tilemapName = map.name;
         return Prefab;
+    }
+    public GameObject InsertAtPosition(Vector2 pos, bool setActive, bool loadAssign = false, Tilemap map = null)
+    {
+        return InsertAtPosition((pos.y, pos.x), setActive, loadAssign, map);
     }
     /// <summary>
     /// Called on loading of the game
     /// </summary>
     public void AssignPrefab()
     {
-        Prefab = GameObjects.GetPrefabByName(this.prefabName);
-        InsertAtPosition(GameObjects.GetTilemapByName(tilemapName), (y, x), true);
+        Prefab = UnityEngine.Object.Instantiate(GameObjects.GetPrefabByName(this.prefabName));
+        InsertAtPosition((y, x), false, true, GameObjects.GetTilemapByName(tilemapName));
         SetupItem();
         //Prefab.GetComponentInChildren<SpriteRenderer>().transform.up = Vector2.up;
         //Prefab.transform.rotation. =  
     }
-    /// <summary>
-    /// Whole time I use (preferably) only Prefab properties, which are saved here
-    /// </summary>
-    public virtual void SaveItem()
+    public override void SaveItem()
     {
-        //Rotation = Prefab.transform.rotation;
+        base.SaveItem();
         x = Prefab.transform.position.x;
         y = Prefab.transform.position.y;
     }
@@ -129,8 +147,13 @@ public abstract class Item : ActionHandler
         if (!GCon.gameStarted)
             return;
     }
-    public virtual void OnLevelEnter()
+    public override void OnLevelLeave()
     {
+        base.OnLevelLeave();
+        if (DeleteOnLeave)
+        {
+            Dispose();
+        }
     }
 }
 

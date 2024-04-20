@@ -22,8 +22,30 @@ public class ActionHandler
     [JsonProperty]
     protected Dictionary<string, ItemAction> actionsEveryFrame = new();
     [JsonProperty]
+    protected Dictionary<string, (long, ItemAction)> actionsFrozen = new();
+    //actions of this item to be executed everyFrame
+    [JsonProperty]
+    protected Dictionary<string, ItemAction> actionsEveryFrameFrozen = new();
+    [JsonProperty]
     public int Id { get; set; }
 
+    public ActionHandler()
+    {
+    }
+
+    public ActionHandler(bool dontBeCalledByJson)
+    {
+        this.Id = GCon.game.IdItems++;
+    }
+
+
+    /// <summary>
+    /// Save non-serializeble variables here
+    /// </summary>
+    public virtual void SaveItem()
+    {
+
+    }
     /// <summary>
     /// Actions to be executed in the current frame. If action is supposed to repeat, it will be added again to the list.
     /// Due to possible differences in duration of particular frames, actions will be executed by number of frames, not real time
@@ -34,7 +56,8 @@ public class ActionHandler
         {
             m.CorrectSpeed();
         }
-        foreach (var action in actionsEveryFrame.Values)
+        Dictionary<string, ItemAction> tempActionsEveryFrame = new Dictionary<string, ItemAction>(actionsEveryFrame);
+        foreach (var action in tempActionsEveryFrame.Values)
         {
             LambdaActions.ExecuteAction(action.ActionName, this, action.Parameters);
         }
@@ -111,37 +134,48 @@ public class ActionHandler
     /// <param name="rewrite">Whether to rewrite running action</param>
     public void AddAction(ItemAction action, string storeName, long delay = 0, RewriteEnum rewrite = RewriteEnum.Rewrite)
     {
-        if (!GCon.game.ItemsStep.ContainsKey(this.Id))
+        Dictionary<string, (long, ItemAction)> temp;
+        Dictionary<string, ItemAction> tempEveryFrame;
+        if ((GCon.game.CurLevel != null && GCon.game.CurLevel.Items.ContainsKey(this.Id)) || action.onLeaveType == ItemAction.OnLeaveType.KeepRunning)
         {
-            GCon.game.ItemsStep.Add(this.Id, this);
+            temp = actions;
+            tempEveryFrame = actionsEveryFrame;
+            if (!GCon.game.ItemsStep.ContainsKey(this.Id))
+            {
+                GCon.game.ItemsStep.Add(this.Id, this);
+            }
         }
-        
+        else
+        {
+            temp = actionsFrozen;
+            tempEveryFrame = actionsEveryFrameFrozen;
+        }
         if (action.Repeat > 1 || action.Repeat == 0)
         {
-            if (!actions.ContainsKey(storeName))
-                actions.Add(storeName, (delay, action));
+            if (!temp.ContainsKey(storeName))
+                temp.Add(storeName, (delay, action));
             else if (rewrite == RewriteEnum.Rewrite)
             {
-                actions.Remove(storeName);
-                actions.Add(storeName, (delay, action));
+                temp.Remove(storeName);
+                temp.Add(storeName, (delay, action));
             }
             else if (rewrite == RewriteEnum.AddNew)
             {
-                actions.Add(storeName + storeIndex.ToString(), (delay, action));
+                temp.Add(storeName + storeIndex.ToString(), (delay, action));
                 storeIndex++;
             }
         }
         else
         {
-            if (!actionsEveryFrame.ContainsKey(storeName))
-                actionsEveryFrame.Add(storeName, action);
+            if (!tempEveryFrame.ContainsKey(storeName))
+                tempEveryFrame.Add(storeName, action);
             else if (rewrite == RewriteEnum.Rewrite)
             {
-                actionsEveryFrame.Remove(storeName);
-                actionsEveryFrame.Add(storeName, action);
+                tempEveryFrame.Remove(storeName);
+                tempEveryFrame.Add(storeName, action);
             }
         }
-        
+
     }
 
     public void DeleteAction(string name)
@@ -164,6 +198,77 @@ public class ActionHandler
         if (GCon.game.ItemsStep.ContainsKey(Id))
         {
             GCon.game.ItemsStep.Remove(Id);
+        }
+    }
+
+    public virtual void OnLevelLeave()
+    {
+        bool keepRunning = false;
+
+
+        Dictionary<string, (long, ItemAction)> temp = new(actions);
+        foreach (var action in temp)
+        {
+            if (action.Value.Item2.onLeaveType == ItemAction.OnLeaveType.Delete)
+            {
+                actions.Remove(action.Key);
+            }
+            if (action.Value.Item2.onLeaveType == ItemAction.OnLeaveType.Freeze)
+            {
+                actionsFrozen.Add(action.Key, action.Value);
+                actions.Remove(action.Key);
+            }
+            if (action.Value.Item2.onLeaveType == ItemAction.OnLeaveType.KeepRunning)
+            {
+                keepRunning = true;
+            }
+        }
+        Dictionary<string, ItemAction> tempEvery = new(actionsEveryFrame);
+        foreach (var action in tempEvery)
+        {
+            if (action.Value.onLeaveType == ItemAction.OnLeaveType.Delete)
+            {
+                actionsEveryFrame.Remove(action.Key);
+            }
+            if (action.Value.onLeaveType == ItemAction.OnLeaveType.Freeze)
+            {
+                actionsEveryFrameFrozen.Add(action.Key, action.Value);
+                actionsEveryFrame.Remove(action.Key);
+            }
+            if (action.Value.onLeaveType == ItemAction.OnLeaveType.KeepRunning)
+            {
+                keepRunning = true;
+            }
+        }
+        if (!keepRunning)
+        {
+            if (GCon.game.ItemsStep.ContainsKey(Id))
+            {
+                GCon.game.ItemsStep.Remove(Id);
+            }
+        }
+    }
+    public virtual void OnLevelEnter()
+    {
+        bool getRunning = false;
+        foreach (var action in actionsFrozen)
+        {
+            actions.Add(action.Key, action.Value);
+            getRunning = true;
+        }
+        foreach (var action in actionsEveryFrameFrozen)
+        {
+            actionsEveryFrame.Add(action.Key, action.Value);
+            getRunning = true;
+        }
+        actionsEveryFrameFrozen.Clear();
+        actionsFrozen.Clear();
+        if (getRunning)
+        {
+            if (!GCon.game.ItemsStep.ContainsKey(Id))
+            {
+                GCon.game.ItemsStep.Add(Id, this);
+            }
         }
     }
 }
