@@ -48,6 +48,7 @@ public class ItemAction
     private double repeat;
     public ExecutionType executionType;
     public OnLeaveType onLeaveType;
+    public long NowDifference { get; set; } = 0;
     /// <summary>
     /// Creates ItemAction - any possible action can be assigned to item
     /// </summary>

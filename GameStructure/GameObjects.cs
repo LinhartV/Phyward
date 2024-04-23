@@ -18,10 +18,16 @@ public static class GameObjects
     public static GameObject redSmallShot;
     public static GameObject fireSwarmShot;
     public static GameObject time;
-    public static GameObject timeEnemy;
+    public static GameObject speed;
+    public static GameObject frequency;
+    public static GameObject mass;
+    public static GameObject length;
+    public static GameObject purpleEnemy;
+    public static GameObject healthBarStandard;
+    public static GameObject redSmallEnemy; 
 
 
-    public static void SetPrefabs(GameObject _timeEnemy, GameObject _time, GameObject _redSmallShot, GameObject _fireSwarmShot, GameObject _exit, GameObject _empty, GameObject _player, GameObject _blueShot, Tilemap _solidLayer)
+    public static void SetPrefabs(GameObject _speed, GameObject _frequency, GameObject _mass, GameObject _length, GameObject _redSmallEnemy, GameObject _healthBarStandard, GameObject _purpleEnemy, GameObject _time, GameObject _redSmallShot, GameObject _fireSwarmShot, GameObject _exit, GameObject _empty, GameObject _player, GameObject _blueShot, Tilemap _solidLayer)
     {
         tilemaps.Add(_solidLayer.name, _solidLayer);
         prefabs.Add(_empty.name, _empty);
@@ -30,6 +36,13 @@ public static class GameObjects
         prefabs.Add(_blueShot.name, _blueShot);
         prefabs.Add(_redSmallShot.name, _redSmallShot);
         prefabs.Add(_fireSwarmShot.name, _fireSwarmShot);
+        prefabs.Add(_healthBarStandard.name, _healthBarStandard);
+        prefabs.Add(_redSmallEnemy.name, _redSmallEnemy);
+        prefabs.Add(_speed.name, _speed);
+        prefabs.Add(_frequency.name, _frequency);
+        prefabs.Add(_mass.name, _mass);
+        prefabs.Add(_length.name, _length);
+        healthBarStandard = _healthBarStandard;
         redSmallShot = _redSmallShot;
         fireSwarmShot = _fireSwarmShot;
         empty = _empty;
@@ -38,7 +51,12 @@ public static class GameObjects
         blueShot = _blueShot;
         solidLayer = _solidLayer;
         time = _time;
-        timeEnemy = _timeEnemy;
+        purpleEnemy = _purpleEnemy;
+        redSmallEnemy = _redSmallEnemy;
+        speed = _speed;
+        frequency = _frequency;
+        mass = _mass;
+        length = _length;
     }
     public static GameObject GetPrefabByName(string name)
     {

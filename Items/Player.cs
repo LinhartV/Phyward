@@ -37,6 +37,7 @@ public class Player : Character
         AddControlledMovement(new CompositeMovement(new ConstantMovement(BaseSpeed, 0), movements), "movement");*/
         this.AddAction(new ItemAction("faceCursor", 1, ItemAction.ExecutionType.EveryTime, ItemAction.OnLeaveType.KeepRunning));
         SetAngle = false;
+        IsInLevel = true;
     }
 
     protected override void SetupItem()
@@ -56,6 +57,7 @@ public class Player : Character
             {
                 var lvl = GCon.game.CurBiom.levels[e.LevelId];
                 GameObject.Find("UnityControl").GetComponent<UnityControl>().BuildLevel(lvl, GCon.game.CurLevel);
+                GCon.game.CurLevel.OnLeave();
                 GCon.game.CurLevel = lvl;
                 lvl.OnEnter();
                 foreach (var exits in GCon.game.CurBiom.levels[e.LevelId].ExitsAr)
@@ -70,7 +72,26 @@ public class Player : Character
                     }
                 }
             }
+            if (collider is Enemy en)
+            {
+                this.AddAction(new ItemAction("receiveDamage", 1, ItemAction.ExecutionType.EveryTime, ItemAction.OnLeaveType.Delete, en.BodyDamage), "receiveDamage" + en.Id);
+            }
         }
+    }
+    public override void OnCollisionLeave(Item collider)
+    {
+        base.OnCollisionLeave(collider);
+        if (collider != null)
+        {
+            if (collider is Enemy en)
+            {
+                this.DeleteAction("receiveDamage" + en.Id);
+            }
+        }
+    }
+    public override void Death()
+    {
+        Debug.Log("You died");
     }
 }
 

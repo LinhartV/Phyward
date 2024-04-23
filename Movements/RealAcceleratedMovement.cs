@@ -103,6 +103,11 @@ public class RealAcceleratedMovement : IMovement
             Angle = ToolsMath.CartesianToPolar(xMovement,yMovement).Item1;
         }
     }
+
+    /*public override void SetSpeedAccordingToPrefabVelocity(Rigidbody2D rb)
+    {
+
+    }*/
     /// <summary>
     /// Sets current movement speed and if it's higher than max speed, it updates max speed as well
     /// </summary>

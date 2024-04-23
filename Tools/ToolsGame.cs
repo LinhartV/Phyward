@@ -33,12 +33,12 @@ public static class ToolsGame
 
     public static void CreateGame()
     {
-        GCon.game.bioms.Add(new MeadowBiom("just.mp3", new LinearGenerator(5, 20, 0, false, 1, new BlockInsert(0.0f, new RandomSpawner((() => { return new TimeEnemy(3); }, 1))))));
+        GCon.game.bioms.Add(new MeadowBiom("just.mp3", new LinearGenerator(5, 20, 0, false, 1, new BlockInsert(0.125f, new RandomSpawner((() => { return new TimeEnemy(1); }, 3), (() => { return new MassEnemy(1); }, 1))))));
 
 
         GCon.game.CurBiom = GCon.game.bioms[0];
         GCon.game.CurLevel = GCon.game.CurBiom.levels[0];
-        GCon.game.Player = (new Player(GCon.game.CurLevel.GetEmptyPosition(), 4f, 50, 25f, null, 1, 1, 1, 1, 100));
+        GCon.game.Player = (new Player(GCon.game.CurLevel.GetEmptyPosition(), 4f, 50, 25f, new BasicWeapon(ToolsMath.SecondsToFrames(1), 10, 5, ToolsMath.SecondsToFrames(1), GameObjects.redSmallShot), 1, 1, 1, 1, 100));
 
     }
 

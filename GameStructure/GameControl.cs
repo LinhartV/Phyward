@@ -26,6 +26,10 @@ public class GameControl
     public List<Biom> bioms = new List<Biom>();
 
     /// <summary>
+    /// List of items to be destroyed at the end of this frame
+    /// </summary>
+    public List<ActionHandler> ItemsToBeDestroyed { get; set; } = new List<ActionHandler>();
+    /// <summary>
     /// List of all items in the game
     /// </summary>
     public Dictionary<int, Item> Items { get; set; } = new Dictionary<int, Item>();

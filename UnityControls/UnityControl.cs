@@ -37,12 +37,24 @@ public class UnityControl : MonoBehaviour
     [SerializeField]
     public GameObject time;
     [SerializeField]
-    public GameObject timeEnemy;
+    public GameObject speed;
+    [SerializeField]
+    public GameObject length;
+    [SerializeField]
+    public GameObject frequency;
+    [SerializeField]
+    public GameObject mass;
+    [SerializeField]
+    public GameObject purpleEnemy;
+    [SerializeField]
+    public GameObject healthBarStandard;
+    [SerializeField]
+    public GameObject redSmallEnemy;
     // Start is called before the first frame update
     void Start()
     {
         ToolsGame.SetupGame();
-        GameObjects.SetPrefabs(timeEnemy, time, redSmallShot, fireSwarmShot, exit, empty, player, blueShot, solidMap);
+        GameObjects.SetPrefabs(speed, frequency, mass, length,redSmallEnemy,healthBarStandard, purpleEnemy, time, redSmallShot, fireSwarmShot, exit, empty, player, blueShot, solidMap);
         ToolsSystem.StartGame("Try");
         GCon.game.Player.Prefab.SetActive(true);
         BuildLevel(GCon.game.CurLevel, null);
@@ -67,6 +79,12 @@ public class UnityControl : MonoBehaviour
             {
                 item.ExecuteActions(GCon.game.Now);
             }
+            List<ActionHandler> tempDestroyed = new List<ActionHandler>(GCon.game.ItemsToBeDestroyed);
+            foreach (var item in tempDestroyed)
+            {
+                item.InnerDispose();
+            }
+            GCon.game.ItemsToBeDestroyed.Clear();
             GCon.game.Now++;
         }
     }
@@ -128,14 +146,8 @@ public class UnityControl : MonoBehaviour
             var temp = new List<Item>(prevLevel.Items.Values);
             foreach (var obj in temp)
             {
-                if (obj.Prefab.tag != "Player")
-                {
-                    obj.Prefab.SetActive(false);
-                    if (obj.DeleteOnLeave)
-                    {
-                        obj.Dispose();
-                    }
-                }
+                obj.OnLevelLeave();
+                obj.Prefab.SetActive(obj.IsInLevel);
             }
         }
         foreach (var obj in level.Items.Values)

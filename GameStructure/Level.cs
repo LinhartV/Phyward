@@ -24,6 +24,8 @@ public class Level : ExitHandler
     public Dictionary<int, Item> Items { get; set; } = new Dictionary<int, Item>();
     [JsonProperty]
     private List<(int, int)> emptyPos = new List<(int, int)>();
+    [JsonProperty]
+    private long leftNow;
     public Level(int id, ILevelGenerator generator, int width, int height, List<PreExit>[] exits) : base(false)
     {
         Id = id;
@@ -67,7 +69,17 @@ public class Level : ExitHandler
 
     public void OnEnter()
     {
-
+        if (leftNow != 0)
+        {
+            foreach (Item item in Items.Values)
+            {
+                item.ChangeNowDifference(GCon.game.Now - leftNow);
+            }
+        }
+    }
+    public void OnLeave()
+    {
+        leftNow = GCon.game.Now;
     }
 
 }

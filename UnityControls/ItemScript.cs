@@ -45,10 +45,21 @@ public class ItemScript : MonoBehaviour
         if (item != null && collision != null)
         {
             ItemScript scr;
-            if (collision.gameObject.TryGetComponent<ItemScript>(out scr) && GCon.game.Items.ContainsKey(scr.item.Id))
-                item.OnCollisionLeave(GCon.game.Items[scr.item.Id]);
+            if (collision.gameObject.transform.parent == null)
+            {
+                if (collision.gameObject.TryGetComponent<ItemScript>(out scr) && GCon.game.Items.ContainsKey(scr.item.Id))
+                    item.OnCollisionLeave(GCon.game.Items[scr.item.Id]);
+                else
+                    item.OnCollisionLeave(new Block());
+            }
             else
-                item.OnCollisionLeave(new Block());
+            {
+                scr = collision.gameObject.GetComponentInParent<ItemScript>();
+                if (scr != null && GCon.game.Items.ContainsKey(scr.item.Id))
+                    item.OnCollisionLeave(GCon.game.Items[scr.item.Id]);
+                else
+                    item.OnCollisionLeave(new Block());
+            }
         }
     }
 }

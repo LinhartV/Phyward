@@ -18,10 +18,10 @@ public class TimeEnemy : Enemy
     {
     }
     /// <param name="coef">Boost of certain parameters - larger number means harder enemy</param>
-    public TimeEnemy(float coef, Tilemap map = null) : base(0.5f, new ToAndFroIdleMovement(), 7, 3, 0.5f, 100, GameObjects.timeEnemy)
+    public TimeEnemy(float coef) : base(coef, 0.5f, new ToAndFroIdleMovement(), 7, 3, 0.5f, 40, GameObjects.redSmallEnemy)
     {
         SetAngle = true;
-        AddAction(new ItemAction("checkDistance", 1));
+        AddAction(new ItemAction("checkDistanceTimeEnemy", 1));
     }
 
     public override void Drop()
@@ -40,21 +40,21 @@ public class TimeEnemy : Enemy
         if (!staticCalled)
         {
             staticCalled = true;
-            lambdaActions.Add("checkDistance", (item, parameter) =>
+            lambdaActions.Add("checkDistanceTimeEnemy", (item, parameter) =>
             {
                 var en = item as TimeEnemy;
-                if (ToolsMath.GetDistance(en, GCon.game.Player) < 5)
+                if (ToolsMath.GetDistance(en, GCon.game.Player) < 6)
                 {
                     en.StopIdleMovement();
                     en.AddAction(new ItemAction("sprintTowardsPlayer", 1));
-                    en.AddControlledMovement(new RealAcceleratedMovement(1, ToolsMath.GetAngleFromLengts(GCon.game.Player, en), en.Acceleration, 5), "sprint");
-                    en.DeleteAction("checkDistance");
-                    en.AddAction(new ItemAction("dispose", ToolsMath.SecondsToFrames(400), ItemAction.ExecutionType.OnlyFirstTime));
+                    en.AddControlledMovement(new RealAcceleratedMovement(1 * en.Coef, ToolsMath.GetAngleFromLengts(GCon.game.Player, en), en.Acceleration * 2 * en.Coef, 5 * en.Coef), "sprint");
+                    en.DeleteAction("checkDistanceTimeEnemy");
+                    en.AddAction(new ItemAction("death", ToolsMath.SecondsToFrames(ToolsGame.Rng(4, 8) * en.Coef), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.Delete));
                 }
             });
             lambdaActions.Add("sprintTowardsPlayer", (item, parameter) =>
             {
-                var en = item as TimeEnemy;
+                var en = item as Movable;
                 en.RotateControlledMovement("sprint", ToolsMath.GetAngleFromLengts(en, GCon.game.Player), false);
                 en.UpdateControlledMovement("sprint");
             });

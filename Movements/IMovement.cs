@@ -59,7 +59,7 @@ public abstract class IMovement
         isUpdated = false;
         return false;
     }
-    public void SetSpeedAccordingToPrefabVelocity(Rigidbody2D rb)
+    public virtual void SetSpeedAccordingToPrefabVelocity(Rigidbody2D rb)
     {
         // Set maximum speed to prefab velocity
 
@@ -94,7 +94,9 @@ public abstract class IMovement
                 y = rb.velocity.y;
             }
         }
-        MovementSpeed = ToolsMath.CartesianToPolar(x, y).Item2;
+        (Angle, MovementSpeed) = ToolsMath.CartesianToPolar(x, y);
+
+        //ResetMovementAngle(angl);
     }
     //change properties of this movement
     public abstract void ResetMovementAngle(float angle);

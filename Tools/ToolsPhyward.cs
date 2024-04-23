@@ -28,6 +28,8 @@ public static class ToolsPhyward
 
     public static void DropDrops(List<Drop> drops, (float, float) pos)
     {
+        float offset = 0.6f;
+        List<Collectable> list = new List<Collectable>();
         foreach (var drop in drops)
         {
             if (ToolsGame.Rng() > drop.probability)
@@ -39,7 +41,18 @@ public static class ToolsPhyward
             {
                 Collectable c = drop.collectable();
                 GCon.game.CurLevel.AddItem(c);
-                c.InsertAtPosition(pos, true);
+                list.Add(c);
+            }
+        }
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (list.Count == 1)
+            {
+                list[i].InsertAtPosition(pos, true);
+            }
+            else
+            {
+                list[i].InsertAtPosition((pos.Item1 + offset * (float)Math.Sin(i * 2 * Math.PI / list.Count), pos.Item2 + offset * (float)Math.Cos(i * 2 * Math.PI / list.Count)), true);
             }
         }
     }
@@ -65,7 +78,7 @@ public static class ToolsPhyward
     public static Dictionary<Type, EnemyInfo> enemyInfos = new Dictionary<Type, EnemyInfo>();
     public static void InstantiateEnemyInfos()
     {
-        enemyInfos.Add(typeof(TimeEnemy), new EnemyInfo("Clocker", "Bytost, jejíž pohyb je závislý na tikání hodin"));
+        enemyInfos.Add(typeof(TimeEnemy), new EnemyInfo("Clocker", "Bytost, jejíž život je závislý na tikání hodin"));
     }
 }
 

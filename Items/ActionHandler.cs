@@ -28,6 +28,7 @@ public class ActionHandler
     protected Dictionary<string, ItemAction> actionsEveryFrameFrozen = new();
     [JsonProperty]
     public int Id { get; set; }
+    public bool IsInLevel { get; set; }
 
     public ActionHandler()
     {
@@ -52,7 +53,7 @@ public class ActionHandler
     /// </summary>
     public void ExecuteActions(long now)
     {
-        if (this is Movable m)
+        if (this is Movable m && m.IsInLevel)
         {
             m.CorrectSpeed();
         }
@@ -61,7 +62,7 @@ public class ActionHandler
         {
             LambdaActions.ExecuteAction(action.ActionName, this, action.Parameters);
         }
-        if (this is Movable mm)
+        if (this is Movable mm && mm.IsInLevel)
         {
             mm.Move();
         }
@@ -69,7 +70,7 @@ public class ActionHandler
         Dictionary<string, (long, ItemAction)> tempActions = new Dictionary<string, (long, ItemAction)>(actions);
         foreach (var actionName in tempActions.Keys)
         {
-            if (tempActions[actionName].Item1 < now)
+            if (tempActions[actionName].Item1 + tempActions[actionName].Item2.NowDifference < now)
             {
                 if (actions[actionName].Item2.executionType == ItemAction.ExecutionType.EveryTime || (actions[actionName].Item2.Repeat == 0 && actions[actionName].Item2.executionType == ItemAction.ExecutionType.OnlyFirstTime))
                 {
@@ -116,6 +117,13 @@ public class ActionHandler
         }
         else { return false; }
     }
+    public void ChangeNowDifference(long nowDifference)
+    {
+        foreach (var action in actions.Values)
+        {
+            action.Item2.NowDifference += nowDifference;
+        }
+    }
     /// <summary>
     /// Adds a new action to be executed
     /// </summary>
@@ -136,7 +144,7 @@ public class ActionHandler
     {
         Dictionary<string, (long, ItemAction)> temp;
         Dictionary<string, ItemAction> tempEveryFrame;
-        if ((GCon.game.CurLevel != null && GCon.game.CurLevel.Items.ContainsKey(this.Id)) || action.onLeaveType == ItemAction.OnLeaveType.KeepRunning)
+        if (IsInLevel || action.onLeaveType == ItemAction.OnLeaveType.KeepRunning || action.onLeaveType == ItemAction.OnLeaveType.Delete)
         {
             temp = actions;
             tempEveryFrame = actionsEveryFrame;
@@ -193,12 +201,23 @@ public class ActionHandler
         }
     }
 
-    public virtual void Dispose()
+    /// <summary>
+    /// what should happen during disposal
+    /// </summary>
+    public virtual void InnerDispose()
     {
         if (GCon.game.ItemsStep.ContainsKey(Id))
         {
             GCon.game.ItemsStep.Remove(Id);
         }
+    }
+
+    /// <summary>
+    /// Tells program to dispose this object at the end of the frame
+    /// </summary>
+    public void Dispose()
+    {
+        GCon.game.ItemsToBeDestroyed.Add(this);
     }
 
     public virtual void OnLevelLeave()

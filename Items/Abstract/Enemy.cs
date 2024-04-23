@@ -12,21 +12,22 @@ public abstract class Enemy : Character
     public float BodyDamage { get; protected set; }
     [JsonProperty]
     private IIdleMovementAI idleMovement;
-
+    public float Coef { get; set; }
     public Enemy() { }
 
-    public Enemy(float bodyDamage, IIdleMovementAI idleMovement, (float, float) pos, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, bool isSolid = true
+    public Enemy(float coef,float bodyDamage, IIdleMovementAI idleMovement, (float, float) pos, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, bool isSolid = true
         , Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, null, 1, 1, 1, 1, lives, prefab, false, isSolid, map)
     {
-        Constructor(bodyDamage, idleMovement);
+        Constructor(bodyDamage, idleMovement, coef);
     }
 
-    public Enemy(float bodyDamage, IIdleMovementAI idleMovement, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, bool isSolid = true) : base(baseSpeed, acceleration, friction, null, 1, 1, 1, 1, lives, prefab, false, isSolid)
+    public Enemy(float coef, float bodyDamage, IIdleMovementAI idleMovement, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, bool isSolid = true) : base(baseSpeed, acceleration, friction, null, 1, 1, 1, 1, lives, prefab, false, isSolid)
     {
-        Constructor(bodyDamage, idleMovement);
+        Constructor(bodyDamage, idleMovement, coef);
     }
-    public void Constructor(float bodyDamage, IIdleMovementAI idleMovement)
+    public void Constructor(float bodyDamage, IIdleMovementAI idleMovement, float coef)
     {
+        this.Coef = coef;
         this.BodyDamage = bodyDamage;
         this.idleMovement = idleMovement;
         this.StartIdleMovement();
@@ -61,10 +62,9 @@ public abstract class Enemy : Character
 
     public abstract void Drop();
 
-    public override void Dispose()
+    public override void InnerDispose()
     {
-        base.Dispose();
-        Drop();
+        base.InnerDispose();
     }
     public void StartIdleMovement()
     {
@@ -74,7 +74,20 @@ public abstract class Enemy : Character
     {
         this.idleMovement.StopIdleMovement(this);
     }
+    public override void Death()
+    {
+        Drop();
+        base.Death();
+    }
 
+    public override void OnCollisionEnter(Item collider)
+    {
+        base.OnCollisionEnter(collider);
+        if (collider is Shot s && s.Character.IsFriendly)
+        {
+            this.ChangeLives(-s.DealDamage());
+        }
+    }
 
 }
 

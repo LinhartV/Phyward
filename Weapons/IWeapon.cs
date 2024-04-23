@@ -9,7 +9,7 @@ using UnityEngine;
 [Serializable]
 public abstract class IWeapon
 {
-    public int ReloadTime { get; set; }
+    public float ReloadTime { get; set; }
     public float Damage { get; set; }
     public float ShotDuration { get; set; }
     public float ShotSpeed { get; set; }
@@ -24,7 +24,7 @@ public abstract class IWeapon
     public bool AutoFire { get; set; }
 
     public IWeapon() { }
-    protected IWeapon(int reloadTime, float damage, float shotSpeed, float shotDuration, GameObject shotPrefab, bool autoFire = true)
+    protected IWeapon(float reloadTime, float damage, float shotSpeed, float shotDuration, GameObject shotPrefab, bool autoFire = true)
     {
         Reloaded = true;
         ReloadTime = reloadTime;

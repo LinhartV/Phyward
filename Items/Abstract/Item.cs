@@ -79,6 +79,7 @@ public abstract class Item : ActionHandler
         {
             map = GameObjects.solidLayer;
         }
+        IsInLevel = setActive;
         Prefab.SetActive(setActive);
         x = pos.Item2;
         y = pos.Item1;
@@ -128,13 +129,12 @@ public abstract class Item : ActionHandler
         ItemScript script = Prefab.AddComponent<ItemScript>();
         script.item = this;
     }
-
-    public override void Dispose()
+    public override void InnerDispose()
     {
-        base.Dispose();
+        base.InnerDispose();
+        UnityEngine.Object.Destroy(this.Prefab);
         GCon.game.Items.Remove(this.Id);
         GCon.game.CurLevel.Items.Remove(this.Id);
-        UnityEngine.Object.Destroy(this.Prefab);
     }
 
     public virtual void OnCollisionEnter(Item collider)
@@ -150,10 +150,19 @@ public abstract class Item : ActionHandler
     public override void OnLevelLeave()
     {
         base.OnLevelLeave();
+        if (GCon.game.CurLevel.Items.ContainsKey(Id))
+        {
+            IsInLevel = false;
+        }
         if (DeleteOnLeave)
         {
             Dispose();
         }
+    }
+    public override void OnLevelEnter()
+    {
+        base.OnLevelEnter();
+        IsInLevel = true;
     }
 }
 

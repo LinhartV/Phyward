@@ -21,7 +21,10 @@ public static class LambdaActions
 
     public static void SetupLambdaActions()
     {
-
+        lambdaActions.Add("receiveDamage", (item, parameter) =>
+        {
+            (item as Character).ChangeLives(-(float)parameter[0]);
+        });
         lambdaActions.Add("randomWalk", (item, parameter) =>
         {
             if ((item as Movable).MovementsControlled["randomMovement"].MovementSpeed == 0)
@@ -74,6 +77,10 @@ public static class LambdaActions
         lambdaActions.Add("dispose", (item, parameter) =>
         {
             item.Dispose();
+        });
+        lambdaActions.Add("death", (item, parameter) =>
+        {
+            (item as Character).Death();
         });
         lambdaActions.Add("faceInDirection", (item, parameter) =>
         {

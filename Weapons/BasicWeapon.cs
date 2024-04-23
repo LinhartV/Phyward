@@ -11,13 +11,13 @@ internal class BasicWeapon : IWeapon
     {
     }
 
-    public BasicWeapon(int reloadTime, float damage, float shotSpeed, float shotDuration, GameObject shotPrefab) : base(reloadTime, damage, shotSpeed, shotDuration, shotPrefab)
+    public BasicWeapon(float reloadTime, float damage, float shotSpeed, float shotDuration, GameObject shotPrefab) : base(reloadTime, damage, shotSpeed, shotDuration, shotPrefab)
     {
     }
 
     public override void Fire()
     {
-        base.Fire(new BasicShot((Character.Prefab.transform.position.y, Character.Prefab.transform.position.x), Character.Id, ShotDuration * Character.CharShotDuration, ShotSpeed * Character.CharShotSpeed, ShotSpeed * Character.CharShotSpeed, 0, 0, 0.1f, this.shotPrefab));
+        base.Fire(new BasicShot((Character.Prefab.transform.position.y, Character.Prefab.transform.position.x), this.Damage, Character.Id, ShotDuration * Character.CharShotDuration, ShotSpeed * Character.CharShotSpeed, ShotSpeed * Character.CharShotSpeed, 0, 0, 0.1f, this.shotPrefab));
 
     }
 }
