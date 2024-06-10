@@ -12,7 +12,7 @@ using static ToolsGame;
 public class GameControl
 {
     public GameControl() {}
-    public string PlayerName { get; private set; }
+    public string PlayerName { get; set; }
     //public Dictionary<int, Level> Levels { get;private set; } = new Dictionary<int, Level>();
     /// <summary>
     /// Increasing id to be assigned for levels during creation
@@ -29,6 +29,11 @@ public class GameControl
     /// List of items to be destroyed at the end of this frame
     /// </summary>
     public List<ActionHandler> ItemsToBeDestroyed { get; set; } = new List<ActionHandler>();
+    /// <summary>
+    /// /// <summary>
+    /// List of items to be set inactive at the end of this frame
+    /// </summary>
+    public List<Item> ItemsToBeSetInactive { get; set; } = new List<Item>();
     /// <summary>
     /// List of all items in the game
     /// </summary>

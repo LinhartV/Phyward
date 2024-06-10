@@ -5,19 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-internal class BasicWeapon : IWeapon
+internal class NormalDispersionBasicWeapon : IWeapon
 {
-    public BasicWeapon()
+    public NormalDispersionBasicWeapon()
     {
     }
 
-    public BasicWeapon(float reloadTime, float damage, float shotSpeed, float shotDuration, GameObject shotPrefab) : base(reloadTime, damage, shotSpeed, shotDuration, shotPrefab)
+    public NormalDispersionBasicWeapon(float reloadTime, float damage, float shotSpeed, float shotDuration, float dispersion, GameObject shotPrefab) : base(reloadTime, damage, shotSpeed, shotDuration, dispersion, shotPrefab)
     {
     }
 
     public override void Fire()
     {
-        base.Fire(new BasicShot((Character.Prefab.transform.position.y, Character.Prefab.transform.position.x), this.Damage, Character.Id, ShotDuration * Character.CharShotDuration, ShotSpeed * Character.CharShotSpeed, ShotSpeed * Character.CharShotSpeed, 0, 0, 0.1f, this.shotPrefab));
+        base.Fire(new BasicShot(Character.Prefab.transform.position, this.Damage, Character.Id, ShotDuration * Character.CharShotDuration, ShotSpeed * Character.CharShotSpeed, ShotSpeed * Character.CharShotSpeed, Character.Angle + ToolsGame.Rng() * Dispersion * 2 - Dispersion, 0, 0, 0.1f, this.shotPrefab));
 
     }
 }

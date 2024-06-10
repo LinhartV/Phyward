@@ -80,5 +80,11 @@ public static class ToolsPhyward
     {
         enemyInfos.Add(typeof(TimeEnemy), new EnemyInfo("Clocker", "Bytost, jejíž život je závislý na tikání hodin"));
     }
+
+    public static List<Craftable> AllCraftables = new List<Craftable>();
+    public static void InstantiateAllCraftables()
+    {
+
+    }
 }
 

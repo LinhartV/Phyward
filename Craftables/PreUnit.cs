@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 /// <summary>
-/// Physic unit - used for crafting
+/// Physic unit - used for crafting - slotable
 /// </summary>
 [Serializable]
 public class PreUnit : Slotable
@@ -15,25 +15,16 @@ public class PreUnit : Slotable
     public PreUnit()
     {
     }
-    public PreUnit(string name, string description, string unit)
+    public PreUnit(string name, string description, string unit, GameObject prefab) : base(name, unit, description, ToolsUI.FilterType.units, prefab, true)
     {
-        Name = name;
-        Description = description;
-        Unit = unit;
         unitNumeratorList.Add(this);
     }
-    public string Name{get; private set; }
-    public string Description { get; private set; }
-    public string Unit { get; private set; }
     public List<PreUnit> unitNumeratorList = new List<PreUnit>();
     public List<PreUnit> unitDenominatorList = new List<PreUnit>();
 
-    public PreUnit(string name, string description, string unit, List<PreUnit> numerator, List<PreUnit> denominator)
+    public PreUnit(string name, string description, string unit, List<PreUnit> numerator, List<PreUnit> denominator, GameObject prefab) : base(name, unit, description, ToolsUI.FilterType.units, prefab, true)
     {
         DecomposeUnit(numerator, denominator);
-        Name = name;
-        Description = description;
-        Unit = unit;
     }
 
     private void DecomposeUnit(List<PreUnit> numerator, List<PreUnit> denominator)
@@ -51,6 +42,6 @@ public class PreUnit : Slotable
         Units.FractionReduction(ref unitNumeratorList, ref unitDenominatorList);
 
     }
-    
+
 }
 

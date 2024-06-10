@@ -12,6 +12,7 @@ public class MeadowBiom : Biom
     {
         this.Music = music;
         levels = generator.GenerateBiom(this);
+        //levels[0].AddItem(new Base(levels[0].GetEmptyPosition(false)));
     }
 
 

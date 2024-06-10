@@ -14,10 +14,6 @@ public class ItemScript : MonoBehaviour
     {
         item.OnCollisionLeave(GCon.game.Items[collision.gameObject.GetInstanceID()]);
     }*/
-    private void FixedUpdate()
-    {
-
-    }
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (item != null && collision != null)
@@ -26,7 +22,9 @@ public class ItemScript : MonoBehaviour
             if (collision.gameObject.transform.parent == null)
             {
                 if (collision.gameObject.TryGetComponent<ItemScript>(out scr) && GCon.game.Items.ContainsKey(scr.item.Id))
+                {
                     item.OnCollisionEnter(GCon.game.Items[scr.item.Id]);
+                }
                 else
                     item.OnCollisionEnter(new Block());
             }
@@ -34,7 +32,9 @@ public class ItemScript : MonoBehaviour
             {
                 scr = collision.gameObject.GetComponentInParent<ItemScript>();
                 if (scr != null && GCon.game.Items.ContainsKey(scr.item.Id))
+                {
                     item.OnCollisionEnter(GCon.game.Items[scr.item.Id]);
+                }
                 else
                     item.OnCollisionEnter(new Block());
             }
@@ -48,7 +48,9 @@ public class ItemScript : MonoBehaviour
             if (collision.gameObject.transform.parent == null)
             {
                 if (collision.gameObject.TryGetComponent<ItemScript>(out scr) && GCon.game.Items.ContainsKey(scr.item.Id))
-                    item.OnCollisionLeave(GCon.game.Items[scr.item.Id]);
+                {
+                    item.OnCollisionLeave(GCon.game.Items[scr.item.Id]); 
+                }
                 else
                     item.OnCollisionLeave(new Block());
             }
@@ -59,6 +61,11 @@ public class ItemScript : MonoBehaviour
                     item.OnCollisionLeave(GCon.game.Items[scr.item.Id]);
                 else
                     item.OnCollisionLeave(new Block());
+            }
+            if (GCon.game.ItemsToBeSetInactive.Contains(item))
+            {
+                this.item.Prefab.SetActive(false);
+                GCon.game.ItemsToBeSetInactive.Remove(item);
             }
         }
     }

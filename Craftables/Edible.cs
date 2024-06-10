@@ -4,7 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public class Edible : Upgradable
+/// <summary>
+/// Everything that can be used once
+/// </summary>
+public class Edible : Craftable
 {
 }
 

@@ -10,31 +10,43 @@ using UnityEngine.Tilemaps;
 /// <summary>
 /// Something player can pick up from ground
 /// </summary>
-public abstract class Collectable : Item
+public abstract class Collectable : Item, IInteractable
 {
-    private Slotable slotableRef;
+    public Slotable SlotableRef { get; private set; }
     public Collectable() { }
 
-    protected Collectable(Slotable slotableRef, GameObject prefab, bool isSolid = false) : base(prefab, isSolid)
+    protected Collectable(Slotable slotableRef, bool isSolid = false) : base(slotableRef.Prefab, isSolid)
     {
         DeleteOnLeave = false;
-        this.slotableRef = slotableRef;
+        this.SlotableRef = slotableRef;
     }
 
-    protected Collectable(Slotable slotableRef, (float, float) pos, GameObject prefab, Tilemap map = null) : base(pos, prefab, false, map)
+    protected Collectable(Slotable slotableRef, Vector2 pos, Tilemap map = null) : base(pos, slotableRef.Prefab, false, map)
     {
         DeleteOnLeave = false;
-        this.slotableRef = slotableRef;
+        this.SlotableRef = slotableRef;
     }
+
     public override void OnCollisionEnter(Item collider)
     {
-        if (!GCon.gameStarted)
+        base.OnCollisionEnter(collider);
+        if (!GCon.GameStarted)
             return;
-        if (collider is Player p)
+
+    }
+
+    protected override void SetupItem()
+    {
+        base.SetupItem();
+        if (SlotableRef!=null)
         {
-            this.Dispose();
-            p.PlayerControl.AddMaterial(slotableRef);
+            SlotableRef.AssignPrefab();
         }
+    }
+
+    public void Interact()
+    {
+        GCon.game.Player.PlayerControl.PickupCollectable(this);
     }
 }
 

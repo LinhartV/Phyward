@@ -7,7 +7,7 @@ using UnityEngine.Tilemaps;
 using UnityEngine;
 using Newtonsoft.Json;
 
-public abstract class Movable : Item
+public abstract class Movable : Item, IPausable
 {
     /// <summary>
     /// Whether to set the angle of the item in the direction of a travel
@@ -16,7 +16,7 @@ public abstract class Movable : Item
     [JsonProperty]
     private float baseSpeed;
     /// <summary>
-    /// Overall speed of an item
+    /// Overall Speed of an item
     /// </summary>
     public float BaseSpeed
     {
@@ -64,10 +64,10 @@ public abstract class Movable : Item
             }
         }
     }
-    //Movements once set and controlled just by the movement itself. It deletes itself when speed is 0. (e.g. shot speed).
+    //Movements once set and controlled just by the movement itself. It deletes itself when Speed is 0. (e.g. shot Speed).
     [JsonProperty]
     public List<IMovement> MovementsAutomated { get; set; } = new List<IMovement>();
-    //Movements controlled by other actions, such as player control. Accesed by id and not deleted even when speed is 0.
+    //Movements controlled by other actions, such as player control. Accesed by id and not deleted even when Speed is 0.
     [JsonProperty]
     public Dictionary<string, IMovement> MovementsControlled { get; set; } = new Dictionary<string, IMovement>();
     [JsonProperty]
@@ -77,7 +77,7 @@ public abstract class Movable : Item
     [JsonIgnore]
     private Vector2 prevVelocity;
     public Movable() { }
-    public Movable((float, float) pos, float baseSpeed, float acceleration, float friction, GameObject prefab, bool isSolid = true, Tilemap map = null) : base(pos, prefab, isSolid, map)
+    public Movable(Vector2 pos, float baseSpeed, float acceleration, float friction, GameObject prefab, bool isSolid = true, Tilemap map = null) : base(pos, prefab, isSolid, map)
     {
         this.BaseSpeed = baseSpeed;
         this.acceleration = acceleration;
@@ -93,6 +93,18 @@ public abstract class Movable : Item
         this.AddAction(new ItemAction("faceInDirection", 1, ItemAction.ExecutionType.EveryTime));
     }
 
+    public void TriggerPause(bool pauseOn)
+    {
+        if (pauseOn)
+        {
+            rb.velocity = Vector2.zero;
+        }
+        else
+        {
+            rb.velocity = prevVelocity;
+        }
+    }
+
     public override void SaveItem()
     {
         xVelocity = rb.velocity.x;
@@ -105,7 +117,7 @@ public abstract class Movable : Item
         this.rb.velocity = new Vector2(xVelocity, yVelocity);
     }
     /// <summary>
-    /// To communicate with unity rigidbody speed system (don't use elsewhere)
+    /// To communicate with unity rigidbody Speed system (don't use elsewhere)
     /// </summary>
     public void CorrectSpeed()
     {

@@ -91,7 +91,7 @@ public abstract class ILevelGenerator
                 maze[y, x] = MazeTile.empty;
                 exitsAr[i][j].X = x;
                 exitsAr[i][j].Y = y;
-                level.AddItem(new Exit((y + yOffset, x + xOffset), x, y, exitsAr[i][j].LevelId, exitsAr[i][j].ExitId));
+                level.AddItem(new Exit(new Vector2(x + xOffset, y + yOffset), x, y, exitsAr[i][j].LevelId, exitsAr[i][j].ExitId));
 
             }
         }

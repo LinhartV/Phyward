@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static RegisteredKey;
 
 /// <summary>
 /// Class for controlling actions assigned to particular keys by their keycode
@@ -16,7 +17,16 @@ public static class KeyController
     public static RegisteredKey GetRegisteredKey(UnityEngine.KeyCode keyName)
     {
         if (registeredKeys.ContainsKey(keyName))
-            return registeredKeys[keyName].Peek();
+        {
+            foreach (var key in registeredKeys[keyName])
+            {
+                if ((GCon.Paused && key.PauseTypeKey != PauseType.onResume) || (!GCon.Paused && key.PauseTypeKey != PauseType.onPause))
+                {
+                    return key;
+                }
+            }
+            return null;
+        }
         else
             return null;
     }
@@ -42,6 +52,13 @@ public static class KeyController
             if (!registeredKeys.ContainsKey(item))
                 registeredKeys.Add(item, new Stack<RegisteredKey>());
             registeredKeys[item].Push(registeredKey);
+        }
+    }
+    public static void SetPressedStateToOtherSameKeys(UnityEngine.KeyCode key, bool pressed)
+    {
+        foreach (var item in registeredKeys[key])
+        {
+            item.Pressed = pressed;
         }
     }
 }

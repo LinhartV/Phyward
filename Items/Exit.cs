@@ -14,7 +14,7 @@ public class Exit : Item
 {
     public Exit() { }
 
-    public Exit((float, float) pos, int exitX, int exitY, int levelId, int exitId, Tilemap map = null) : base(pos, GameObjects.exit, false, map)
+    public Exit(Vector2 pos, int exitX, int exitY, int levelId, int exitId, Tilemap map = null) : base(pos, GameObjects.exit, false, map)
     {
         this.ExitX = exitX;
         this.ExitY = exitY;

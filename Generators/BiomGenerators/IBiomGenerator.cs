@@ -89,10 +89,10 @@ public abstract class IBiomGenerator
         while (Rng() <= probability && cellCount < maxSize)
         {
             //Okey, explenation here: Fundamental idea is 50/50 for +width or +height. But I may want to keep cells in row (keep linear = true).
-            //Then if for the first time the width is chosen, then width will be chosen every other time too.
+            //Then if for the first Time the width is chosen, then width will be chosen every other Time too.
             //If keep linear is false the algorithm is allowed to add cell on each side (making more square-like rectangles).
             //But what if I need 7 cells and algo already formed square 2x2 - I have free space but I will never be able to form rectangle of exactly 7 cells.
-            //So each time algo checks if by enlarging particular dimension the rectangle is still possible to form.
+            //So each Time algo checks if by enlarging particular dimension the rectangle is still possible to form.
             //And lastly the algo needs to check if by choosing particular dimension the number of cells won't be more than maximum.
             //And also if width or height is less than allowed maximum 
             //THIS TERM IS TOO CRAZY TO EVALUATE! Doing it brute force...

@@ -16,6 +16,9 @@ using Newtonsoft.Json.Linq;
 
 public static class ToolsSystem
 {
+
+    
+
     public static JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings()
     {
         TypeNameHandling = TypeNameHandling.All,
@@ -66,7 +69,16 @@ public static class ToolsSystem
         else
             return false;
     }
-
+    public static void ReleaseAllKeys()
+    {
+        foreach (var key in KeyController.registeredKeys.Values)
+        {
+            if (key.Peek().Pressed && key.Peek().PauseTypeKey == RegisteredKey.PauseType.onResume)
+            {
+                key.Peek().KeyUp();
+            }
+        }
+    }
     public static void SaveGame(GameControl game)
     {
         if (!Directory.Exists("./SavedGames"))
@@ -76,13 +88,7 @@ public static class ToolsSystem
         string destination = "./SavedGames/" + game.PlayerName + ".json";
 
         //before saving simulate key release of all keys
-        foreach (var key in KeyController.registeredKeys.Values)
-        {
-            if (key.Peek().Pressed)
-            {
-                key.Peek().KeyUp();
-            }
-        }
+        ReleaseAllKeys();
         foreach (var item in game.Items.Values)
         {
             item.SaveItem();
@@ -112,17 +118,28 @@ public static class ToolsSystem
         try
         {
             game = JsonConvert.DeserializeObject<GameControl>(jsonString, jsonSerializerSettings);
-            GCon.game.Player.AssignPrefab();
+            //GCon.game.Player.AssignPrefab();
+            ToolsUI.SetupUI();
+            ToolsUI.LoadUI();
             foreach (var item in game.Items.Values)
             {
                 item.AssignPrefab();
             }
+            foreach (var item in GCon.game.Player.PlayerControl.backpack)
+            {
+                item.AssignPrefab();
+            }
+            foreach (var item in GCon.game.Player.PlayerControl.inBase)
+            {
+                item.AssignPrefab();
+            }
+
             //game = JsonUtility.FromJson<GameControl>(jsonString);
             return true;
         }
         catch (Exception e)
         {
-            Debug.LogError(e);
+            Debug.Log(e);
             game = null;
             return false;
         }

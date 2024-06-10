@@ -37,7 +37,7 @@ public class Level : ExitHandler
 
     public void AddItem(Item item)
     {
-        item.Prefab.SetActive(GCon.game.CurLevel == this && GCon.gameStarted);
+        item.Prefab.SetActive(GCon.game.CurLevel == this && GCon.GameStarted);
         Items.Add(item.Id, item);
     }
 
@@ -55,7 +55,7 @@ public class Level : ExitHandler
     /// </summary>
     /// <param name="blocking">Whether to set the tile as blocked (thus removing it from empty positions) - should not be wall as it could block path.</param>
     /// <returns>Empty position of the maze</returns>
-    public (int, int) GetEmptyPosition(bool blocking = false)
+    public Vector2 GetEmptyPosition(bool blocking = false)
     {
         var index = Rng(0, emptyPos.Count);
         var position = emptyPos.Count > 0 ? emptyPos[index] : (-1, -1);
@@ -64,7 +64,7 @@ public class Level : ExitHandler
             emptyPos.RemoveAt(index);
         }
 
-        return position;
+        return new Vector2(position.Item2, position.Item1);
     }
 
     public void OnEnter()

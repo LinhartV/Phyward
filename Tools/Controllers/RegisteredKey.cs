@@ -11,10 +11,18 @@ using Unity.VisualScripting;
 /// </summary>
 public class RegisteredKey
 {
+    /// <summary>
+    /// When the key is active
+    /// </summary>
+    public enum PauseType { onPause, onResume, both };
     //whether the key is currently pressed or not
     public bool Pressed { get; set; } = false;
     //whether the functionality of this key is active of not
     public bool Active { get; set; } = true;
+    /// <summary>
+    /// whether this key is active while the game is running or is active when paused
+    /// </summary>
+    public PauseType PauseTypeKey { get; set; }
     //actions assigned to each event
     public Action KeyDown { get; set; }
     public Action KeyUp { get; set; }
@@ -23,47 +31,59 @@ public class RegisteredKey
     /// <summary>
     /// Bind up new key to action
     /// </summary>
-    public RegisteredKey(ToolsGame.PlayerActionsEnum playerAction)
+    public RegisteredKey(ToolsGame.PlayerActionsEnum playerAction, PauseType pausedKey = PauseType.onResume)
     {
         this.KeyDown = () =>
         {
             if (Pressed == false)
             {
                 Pressed = true;
+                
                 if (ToolsGame.actions.ContainsKey(playerAction))
                 {
                     ToolsGame.actions[playerAction].Item1();
                 }
+                
             }
         };
         this.KeyUp = () =>
         {
             Pressed = false;
+            
             if (ToolsGame.actions.ContainsKey(playerAction))
             {
                 ToolsGame.actions[playerAction].Item2();
             }
+            
         };
+        PauseTypeKey = pausedKey;
     }
 
     /// <summary>
     /// Bind up new key to action
     /// </summary>
-    public RegisteredKey(string actionPress, string actionRelease, ActionHandler item)
+    public RegisteredKey(string actionPress, string actionRelease, ActionHandler item, PauseType pausedKey = PauseType.onResume)
     {
         this.KeyDown = () =>
         {
             if (Pressed == false)
             {
                 Pressed = true;
-                LambdaActions.ExecuteAction(actionPress, item);
+                if ((GCon.Paused && pausedKey != PauseType.onResume)|| (!GCon.Paused && pausedKey != PauseType.onPause))
+                {
+                    LambdaActions.ExecuteAction(actionPress, item);
+                }
             }
         };
         this.KeyUp = () =>
         {
+            if ((GCon.Paused && pausedKey != PauseType.onResume) || (!GCon.Paused && pausedKey != PauseType.onPause))
+            {
+                LambdaActions.ExecuteAction(actionRelease, item);
+            }
             Pressed = false;
-            LambdaActions.ExecuteAction(actionRelease, item);
         };
+        PauseTypeKey = pausedKey;
     }
 
 }

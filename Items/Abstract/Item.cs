@@ -17,12 +17,12 @@ public abstract class Item : ActionHandler
     {
     }
 
-    public Item((float, float) pos, GameObject prefab, bool isSolid = false, Tilemap map = null) : base(true)
+    public Item(Vector2 pos, GameObject prefab, bool isSolid = false, Tilemap map = null) : base(true)
     {
         this.prefabName = prefab.name;
         this.IsSolid = isSolid;
         Prefab = UnityEngine.Object.Instantiate(prefab);
-        InsertAtPosition(pos, GCon.gameStarted, false, map);
+        InsertAtPosition(pos, GCon.GameStarted, false, map);
         GCon.game.Items.Add(Id, this);
         SetupItem();
     }
@@ -54,9 +54,13 @@ public abstract class Item : ActionHandler
     [JsonProperty]
     private float y;
     [JsonProperty]
+    private float z;
+    [JsonProperty]
     private string tilemapName;
     [JsonProperty]
     private string prefabName;
+    [JsonIgnore]
+    public bool IsTriggered { get; set; }
     [JsonProperty]
     public bool IsSolid { get; set; }
     [JsonIgnore]
@@ -64,12 +68,14 @@ public abstract class Item : ActionHandler
     [JsonIgnore]
     protected Rigidbody2D rb;
 
+    [JsonProperty]
+    protected bool setActiveOnLoad = false;
     /// <summary>
     /// Whether to delete this Item when player leave the room
     /// </summary>
     public bool DeleteOnLeave { get; set; } = false;
 
-    public GameObject InsertAtPosition((float, float) pos, Tilemap map = null)
+    public GameObject InsertAtPosition(Vector2 pos, Tilemap map = null)
     {
         return InsertAtPosition(pos, this.Prefab.activeInHierarchy, false, map);
     }
@@ -83,7 +89,7 @@ public abstract class Item : ActionHandler
         Prefab.SetActive(setActive);
         x = pos.Item2;
         y = pos.Item1;
-        if (loadAssign || GCon.gameStarted)
+        if (loadAssign || GCon.GameStarted)
             Prefab.transform.position = new Vector3(x, y, Prefab.transform.position.z);
         else
         {
@@ -104,8 +110,9 @@ public abstract class Item : ActionHandler
     public void AssignPrefab()
     {
         Prefab = UnityEngine.Object.Instantiate(GameObjects.GetPrefabByName(this.prefabName));
-        InsertAtPosition((y, x), false, true, GameObjects.GetTilemapByName(tilemapName));
         SetupItem();
+        InsertAtPosition((y, x), setActiveOnLoad, true, GameObjects.GetTilemapByName(tilemapName));
+
         //Prefab.GetComponentInChildren<SpriteRenderer>().transform.up = Vector2.up;
         //Prefab.transform.rotation. =  
     }
@@ -114,6 +121,7 @@ public abstract class Item : ActionHandler
         base.SaveItem();
         x = Prefab.transform.position.x;
         y = Prefab.transform.position.y;
+        z = Prefab.transform.position.z;
     }
     /// <summary>
     /// This method is called in constructor and on load of the game.
@@ -135,17 +143,42 @@ public abstract class Item : ActionHandler
         UnityEngine.Object.Destroy(this.Prefab);
         GCon.game.Items.Remove(this.Id);
         GCon.game.CurLevel.Items.Remove(this.Id);
+
     }
 
     public virtual void OnCollisionEnter(Item collider)
     {
-        if (!GCon.gameStarted)
+        if (!GCon.GameStarted)
             return;
+        if (collider is Player p)
+        {
+            IsTriggered = true;
+            if (this is Collectable c)
+            {
+                if (!p.PlayerControl.AutoPickup)
+                {
+                    GCon.lastInteractable = c;
+                }
+            }
+            else if (this is IInteractable i)
+            {
+                GCon.lastInteractable = i;
+            }
+        }
+        
     }
     public virtual void OnCollisionLeave(Item collider)
     {
-        if (!GCon.gameStarted)
+        if (!GCon.GameStarted)
             return;
+        if (collider is Player)
+        {
+            IsTriggered = false;
+            if (this is IInteractable && GCon.lastInteractable == this)
+            {
+                GCon.lastInteractable = null;
+            }
+        }
     }
     public override void OnLevelLeave()
     {
@@ -162,7 +195,6 @@ public abstract class Item : ActionHandler
     public override void OnLevelEnter()
     {
         base.OnLevelEnter();
-        IsInLevel = true;
     }
 }
 

@@ -18,9 +18,9 @@ public class ItemAction
     {
         ///<summary>Action executes immidiatelly and repeats infinitely</summary>
         EveryTime,
-        ///<summary>Action repeats infinitely, but doesn't execute first time</summary>
+        ///<summary>Action repeats infinitely, but doesn't execute first Time</summary>
         NotFirstTime,
-        ///<summary>Action executes only once after duration time runs out (set duration to 0 to happen at the start of the very next frame)</summary>
+        ///<summary>Action executes only once after duration Time runs out (set duration to 0 to happen at the start of the very next frame)</summary>
         OnlyFirstTime,
         ///<summary>Stops execution of selected action</summary>
         StopExecuting
@@ -50,10 +50,10 @@ public class ItemAction
     public OnLeaveType onLeaveType;
     public long NowDifference { get; set; } = 0;
     /// <summary>
-    /// Creates ItemAction - any possible action can be assigned to item
+    /// Creates ItemAction - any possible action can be assigned to an item
     /// </summary>
     /// <param name="actionName">Name of an action from LambdaActions</param>
-    /// <param name="repeat">How many frames to wait between executions (0 = only first time, 1 = each frame)</param>
+    /// <param name="repeat">How many frames to wait between executions (0 = only first Time, 1 = each frame)</param>
     /// <param name="clientAction">Whether this action should be executed on client side</param>
     /// <param name="executionType"></param>
     public ItemAction(string actionName, double repeat, ExecutionType executionType = ExecutionType.EveryTime, OnLeaveType onLeaveType = OnLeaveType.Freeze, params object[] parameters)

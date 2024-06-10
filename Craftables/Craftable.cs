@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 /// <summary>
 /// Something that player can craft.
@@ -6,9 +7,16 @@
 [Serializable]
 public abstract class Craftable : Slotable
 {
-	public Craftable(){}
+    public (Slotable, int)[] NeededMaterials{get; private set;}
+    public int Tier { get;private set;}
+    public Craftable() { }
+
     /// <param name="neededMaterials">What and how many</param>
-    protected Craftable(string spriteName, params (Craftable,int)[] neededMaterials) : base(spriteName)
+    /// <param name="tier">Rarity of this item</param>
+    /// <param name="filter">Kind of this item</param>
+    protected Craftable(string name, string subheading, string description, int tier, ToolsUI.FilterType filter, GameObject prefab, params (Slotable, int)[] neededMaterials) : base(name, subheading, description, filter, prefab)
     {
+        NeededMaterials = neededMaterials;
+        Tier = tier;
     }
 }

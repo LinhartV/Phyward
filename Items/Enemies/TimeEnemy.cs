@@ -28,7 +28,7 @@ public class TimeEnemy : Enemy
     {
         List<ToolsPhyward.Drop> l = new List<ToolsPhyward.Drop>
         {
-            new ToolsPhyward.Drop(1, 1, 1, () => { return new Unit(Units.time, GameObjects.time); })
+            new ToolsPhyward.Drop(1, 1, 1, () => { return new Unit(Units.Time()); })
         };
         ToolsPhyward.DropDrops(l, this.Prefab.transform.position);
     }
@@ -49,7 +49,7 @@ public class TimeEnemy : Enemy
                     en.AddAction(new ItemAction("sprintTowardsPlayer", 1));
                     en.AddControlledMovement(new RealAcceleratedMovement(1 * en.Coef, ToolsMath.GetAngleFromLengts(GCon.game.Player, en), en.Acceleration * 2 * en.Coef, 5 * en.Coef), "sprint");
                     en.DeleteAction("checkDistanceTimeEnemy");
-                    en.AddAction(new ItemAction("death", ToolsMath.SecondsToFrames(ToolsGame.Rng(4, 8) * en.Coef), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.Delete));
+                    en.AddAction(new ItemAction("death", ToolsMath.SecondsToFrames(ToolsGame.Rng(4, 8) * en.Coef), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.Freeze));
                 }
             });
             lambdaActions.Add("sprintTowardsPlayer", (item, parameter) =>

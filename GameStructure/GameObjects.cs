@@ -24,10 +24,20 @@ public static class GameObjects
     public static GameObject length;
     public static GameObject purpleEnemy;
     public static GameObject healthBarStandard;
-    public static GameObject redSmallEnemy; 
+    public static GameObject redSmallEnemy;
+    public static GameObject slot;
+    public static GameObject unitAnimation;
+    public static GameObject counter;
+    public static GameObject slingshot;
+    public static GameObject sling;
+    public static GameObject blowgun;
+    public static GameObject baseHouse;
+    public static GameObject craftable;
+    public static GameObject crumblingRock;
+    public static GameObject burningRock;
 
 
-    public static void SetPrefabs(GameObject _speed, GameObject _frequency, GameObject _mass, GameObject _length, GameObject _redSmallEnemy, GameObject _healthBarStandard, GameObject _purpleEnemy, GameObject _time, GameObject _redSmallShot, GameObject _fireSwarmShot, GameObject _exit, GameObject _empty, GameObject _player, GameObject _blueShot, Tilemap _solidLayer)
+    public static void SetPrefabs(GameObject _burningRock, GameObject _crumblingRock,GameObject _craftable, GameObject _baseHouse, GameObject _sling, GameObject _blowgun, GameObject _slingshot,GameObject _counter, GameObject _unitAnimation, GameObject _slot, GameObject _speed, GameObject _frequency, GameObject _mass, GameObject _length, GameObject _redSmallEnemy, GameObject _healthBarStandard, GameObject _purpleEnemy, GameObject _time, GameObject _redSmallShot, GameObject _fireSwarmShot, GameObject _exit, GameObject _empty, GameObject _player, GameObject _blueShot, Tilemap _solidLayer)
     {
         tilemaps.Add(_solidLayer.name, _solidLayer);
         prefabs.Add(_empty.name, _empty);
@@ -42,6 +52,28 @@ public static class GameObjects
         prefabs.Add(_frequency.name, _frequency);
         prefabs.Add(_mass.name, _mass);
         prefabs.Add(_length.name, _length);
+        prefabs.Add(_slot.name, _slot);
+        prefabs.Add(_time.name, _time);
+        prefabs.Add(_unitAnimation.name, _unitAnimation);
+        prefabs.Add(_counter.name, _counter);
+        prefabs.Add(_slingshot.name, _slingshot);
+        prefabs.Add(_blowgun.name, _blowgun);
+        prefabs.Add(_sling.name, _sling);
+        prefabs.Add(_baseHouse.name, _baseHouse);
+        prefabs.Add(_purpleEnemy.name, _purpleEnemy);
+        prefabs.Add(_craftable.name, _craftable);
+        prefabs.Add(_crumblingRock.name, _crumblingRock);
+        prefabs.Add(_burningRock.name, _burningRock);
+        burningRock = _burningRock;
+        crumblingRock = _crumblingRock;
+        craftable = _craftable;
+        baseHouse = _baseHouse;
+        sling = _sling;
+        blowgun = _blowgun;
+        slingshot = _slingshot;
+        counter = _counter;
+        unitAnimation = _unitAnimation;
+        slot = _slot;
         healthBarStandard = _healthBarStandard;
         redSmallShot = _redSmallShot;
         fireSwarmShot = _fireSwarmShot;

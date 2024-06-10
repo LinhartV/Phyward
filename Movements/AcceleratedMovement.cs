@@ -37,7 +37,7 @@ public class AcceleratedMovement : IMovement
     {
         base.Frame(friction);
         bool stopped;
-        if (this.MovementSpeed > 0.0005)
+        if (this.MovementSpeed > Constants.MIN_VALUE)
         {
             MovementSpeed -= friction * frictionCoef * GCon.percentageOfFrame;
             if (MovementSpeed < 0)
@@ -80,7 +80,7 @@ public class AcceleratedMovement : IMovement
         }
     }
     /// <summary>
-    /// Sets current movement speed and if it's higher than max speed, it updates max speed as well
+    /// Sets current movement Speed and if it's higher than max Speed, it updates max Speed as well
     /// </summary>
     public override void ResetMovementSpeed(float speed)
     {

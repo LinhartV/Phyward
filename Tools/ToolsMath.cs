@@ -75,4 +75,20 @@ public static class ToolsMath
     {
         return seconds / GCon.percentageOfFrame;
     }
+    public static Vector4 ColorToVector(Color color)
+    {
+        return new Vector4(color.r, color.g, color.b, color.a);
+    }
+    public static Vector4 VectorToColor(Vector4 color)
+    {
+        return new Color(color.x, color.y, color.z, color.w);
+    }
+    public static float RadToDegree(float rad)
+    {
+        return (float)(rad * 180 / Math.PI);
+    }
+    public static float DegreeToRad(float degree)
+    {
+        return (float)(degree * Math.PI / 180);
+    }
 }

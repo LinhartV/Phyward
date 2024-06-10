@@ -61,9 +61,9 @@ public abstract class IMovement
     }
     public virtual void SetSpeedAccordingToPrefabVelocity(Rigidbody2D rb)
     {
-        // Set maximum speed to prefab velocity
+        // Set maximum Speed to prefab velocity
 
-        //my speed
+        //my Speed
         float x, y;
         (x, y) = ToolsMath.PolarToCartesian(angle, MovementSpeed);
         if (x > 0)
@@ -95,6 +95,7 @@ public abstract class IMovement
             }
         }
         (Angle, MovementSpeed) = ToolsMath.CartesianToPolar(x, y);
+        this.UpdateMovement();
 
         //ResetMovementAngle(angl);
     }

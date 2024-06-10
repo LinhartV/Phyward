@@ -15,7 +15,7 @@ public abstract class Enemy : Character
     public float Coef { get; set; }
     public Enemy() { }
 
-    public Enemy(float coef,float bodyDamage, IIdleMovementAI idleMovement, (float, float) pos, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, bool isSolid = true
+    public Enemy(float coef,float bodyDamage, IIdleMovementAI idleMovement, Vector2 pos, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, bool isSolid = true
         , Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, null, 1, 1, 1, 1, lives, prefab, false, isSolid, map)
     {
         Constructor(bodyDamage, idleMovement, coef);

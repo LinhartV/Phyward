@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using static ToolsGame;
@@ -20,10 +21,8 @@ public class UnityControl : MonoBehaviour
     Tilemap backgroundDecorationsMap;
     [SerializeField]
     TileBase wallTile;
-
     [SerializeField]
     private GameObject empty;
-
     [SerializeField]
     private GameObject blueShot;
     [SerializeField]
@@ -50,42 +49,111 @@ public class UnityControl : MonoBehaviour
     public GameObject healthBarStandard;
     [SerializeField]
     public GameObject redSmallEnemy;
+    [SerializeField]
+    public GameObject slot;
+    [SerializeField]
+    public GameObject unitAnimation;
+    [SerializeField]
+    public Texture2D normalCursor;
+    [SerializeField]
+    public Texture2D selectCursor;
+    [SerializeField]
+    public Texture2D holdCursor;
+    [SerializeField]
+    public Texture2D aimCursor;
+    [SerializeField]
+    public GameObject counter;
+    [SerializeField]
+    public GameObject slingshot;
+    [SerializeField]
+    public GameObject blowgun;
+    [SerializeField]
+    public GameObject sling;
+    [SerializeField]
+    public GameObject baseHouse;
+    [SerializeField]
+    public GameObject craftable;
+    [SerializeField]
+    public GameObject crumblingRock;
+    [SerializeField]
+    public GameObject burningRock;
+
     // Start is called before the first frame update
     void Start()
     {
+        ToolsUI.holdCursor = holdCursor; ToolsUI.selectCursor = selectCursor; ToolsUI.normalCursor = normalCursor; ToolsUI.aimCursor = aimCursor;
+        GameObjects.SetPrefabs(burningRock, crumblingRock, craftable, baseHouse, sling, blowgun, slingshot, counter, unitAnimation, slot, speed, frequency, mass, length, redSmallEnemy, healthBarStandard, purpleEnemy, time, redSmallShot, fireSwarmShot, exit, empty, player, blueShot, solidMap);
+        ToolsUI.SetCursor(aimCursor);
         ToolsGame.SetupGame();
-        GameObjects.SetPrefabs(speed, frequency, mass, length,redSmallEnemy,healthBarStandard, purpleEnemy, time, redSmallShot, fireSwarmShot, exit, empty, player, blueShot, solidMap);
         ToolsSystem.StartGame("Try");
-        GCon.game.Player.Prefab.SetActive(true);
-        BuildLevel(GCon.game.CurLevel, null);
+        BuildLevel(GCon.game.CurLevel, null, GCon.game.Player.Prefab.transform.position);
         var camera = GameObject.FindGameObjectWithTag("MainCamera");
-        if (player != null)
-        {
-            camera.GetComponent<CameraFollow>().target = GCon.game.Player.Prefab.transform;
-        }
-        GCon.gameStarted = true;
+        camera.GetComponent<CameraFollow>().target = GCon.game.Player.Prefab.transform;
+        GCon.GameStarted = true;
+        GCon.game.Player.Prefab.SetActive(true);
+        OnResize();
     }
+
     private void Update()
     {
         KeyPress();
         KeyRelease();
+        //OnResize();
     }
     private void FixedUpdate()
     {
-        if (GCon.gameStarted)
+        if (GCon.GameStarted)
         {
-            Dictionary<int, ActionHandler> temp = new Dictionary<int, ActionHandler>(GCon.game.ItemsStep);
-            foreach (ActionHandler item in temp.Values)
+            if (!GCon.Paused)
             {
-                item.ExecuteActions(GCon.game.Now);
+
+                Dictionary<int, ActionHandler> temp = new Dictionary<int, ActionHandler>(GCon.game.ItemsStep);
+                foreach (ActionHandler item in temp.Values)
+                {
+                    item.ExecuteActions(GCon.game.Now);
+                }
+                List<ActionHandler> tempDestroyed = new List<ActionHandler>(GCon.game.ItemsToBeDestroyed);
+                foreach (var item in tempDestroyed)
+                {
+                    item.InnerDispose();
+                }
+                GCon.game.ItemsToBeDestroyed.Clear();
+                List<Item> tempInactive = new List<Item>(GCon.game.ItemsToBeSetInactive);
+                foreach (var item in tempInactive)
+                {
+                    if (item.IsTriggered == false)
+                    {
+                        item.Prefab.SetActive(false);
+                        GCon.game.ItemsToBeSetInactive.Remove(item);
+                    }
+                }
+                GCon.game.Now++;
             }
-            List<ActionHandler> tempDestroyed = new List<ActionHandler>(GCon.game.ItemsToBeDestroyed);
-            foreach (var item in tempDestroyed)
+
+            List<ActionHandler> tempDestroyedUI = new List<ActionHandler>(ToolsUI.UIItemsToBeDestroyed);
+            foreach (var item in tempDestroyedUI)
             {
                 item.InnerDispose();
             }
-            GCon.game.ItemsToBeDestroyed.Clear();
-            GCon.game.Now++;
+            ToolsUI.UIItemsToBeDestroyed.Clear();
+            List<ActionHandler> tempUI = new List<ActionHandler>(ToolsUI.UIItemsStep);
+            foreach (ActionHandler item in tempUI)
+            {
+                item.ExecuteActions(ToolsUI.nowUI);
+            }
+            ToolsUI.TransitionTransitables(Time.deltaTime);
+            ToolsUI.nowUI++;
+            //Debug.Log(GCon.game.Now);
+        }
+
+    }
+    float prevWidth = 0;
+    float prevHeight = 0;
+    private void OnResize()
+    {
+        if (prevWidth != Screen.width || prevHeight != Screen.height)
+        {
+            ToolsUI.OnResize();
         }
     }
 
@@ -98,9 +166,17 @@ public class UnityControl : MonoBehaviour
     {
         foreach (var key in KeyController.registeredKeys)
         {
-            if (Input.GetKey(key.Key))
+            try
             {
-                key.Value.Peek().KeyDown();
+                if (Input.GetKey(key.Key))
+                {
+                    KeyController.GetRegisteredKey(key.Key)?.KeyDown();
+                    KeyController.SetPressedStateToOtherSameKeys(key.Key, true);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Log(e.Message);
             }
         }
     }
@@ -110,12 +186,13 @@ public class UnityControl : MonoBehaviour
         {
             if (Input.GetKeyUp(key.Key))
             {
-                key.Value.Peek().KeyUp();
+                KeyController.GetRegisteredKey(key.Key)?.KeyUp();
+                KeyController.SetPressedStateToOtherSameKeys(key.Key, false);
             }
         }
     }
 
-    public void BuildLevel(Level level, Level prevLevel)
+    public void BuildLevel(Level level, Level prevLevel, Vector2 playerPos)
     {
         if (level == null)
         {
@@ -147,7 +224,10 @@ public class UnityControl : MonoBehaviour
             foreach (var obj in temp)
             {
                 obj.OnLevelLeave();
-                obj.Prefab.SetActive(obj.IsInLevel);
+                if (!obj.IsInLevel)
+                {
+                    GCon.game.ItemsToBeSetInactive.Add(obj);
+                }
             }
         }
         foreach (var obj in level.Items.Values)
@@ -155,6 +235,7 @@ public class UnityControl : MonoBehaviour
             obj.Prefab.SetActive(true);
             obj.OnLevelEnter();
         }
+        GCon.game.Player.Prefab.transform.position = new Vector3(playerPos.x, playerPos.y, GCon.game.Player.Prefab.transform.position.z);
     }
     private void InsertTile(TileBase tile, Tilemap map, int x, int y)
     {

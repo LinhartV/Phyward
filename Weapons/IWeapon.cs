@@ -13,6 +13,7 @@ public abstract class IWeapon
     public float Damage { get; set; }
     public float ShotDuration { get; set; }
     public float ShotSpeed { get; set; }
+    public float Dispersion { get; set; }
     public Character Character { get; set; }
     [JsonIgnore]
     protected GameObject shotPrefab;
@@ -24,7 +25,7 @@ public abstract class IWeapon
     public bool AutoFire { get; set; }
 
     public IWeapon() { }
-    protected IWeapon(float reloadTime, float damage, float shotSpeed, float shotDuration, GameObject shotPrefab, bool autoFire = true)
+    protected IWeapon(float reloadTime, float damage, float shotSpeed, float shotDuration, float dispersion, GameObject shotPrefab, bool autoFire = true)
     {
         Reloaded = true;
         ReloadTime = reloadTime;
@@ -34,6 +35,7 @@ public abstract class IWeapon
         this.prefabName = shotPrefab.name;
         this.shotPrefab = shotPrefab;
         AutoFire = autoFire;
+        Dispersion = ToolsMath.DegreeToRad(dispersion);
     }
 
     public void SetupWeapon()

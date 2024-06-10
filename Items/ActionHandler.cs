@@ -49,7 +49,7 @@ public class ActionHandler
     }
     /// <summary>
     /// Actions to be executed in the current frame. If action is supposed to repeat, it will be added again to the list.
-    /// Due to possible differences in duration of particular frames, actions will be executed by number of frames, not real time
+    /// Due to possible differences in duration of particular frames, actions will be executed by number of frames, not real Time
     /// </summary>
     public void ExecuteActions(long now)
     {
@@ -150,7 +150,14 @@ public class ActionHandler
             tempEveryFrame = actionsEveryFrame;
             if (!GCon.game.ItemsStep.ContainsKey(this.Id))
             {
-                GCon.game.ItemsStep.Add(this.Id, this);
+                if (this is Item)
+                {
+                    GCon.game.ItemsStep.Add(this.Id, this);
+                }
+                else
+                {
+                    ToolsUI.UIItemsStep.Add(this);
+                }
             }
         }
         else
@@ -197,12 +204,19 @@ public class ActionHandler
             actionsEveryFrame.Remove(name);
         if (actions.Count == 0 && actionsEveryFrame.Count == 0)
         {
-            GCon.game.ItemsStep.Remove(this.Id);
+            if (this is Item)
+            {
+                GCon.game.ItemsStep.Remove(this.Id);
+            }
+            if (this is UIItem u)
+            {
+                ToolsUI.UIItemsStep.Remove(u);
+            }
         }
     }
 
     /// <summary>
-    /// what should happen during disposal
+    /// what should happen during disposal - don't call to dispose object (called automatically)
     /// </summary>
     public virtual void InnerDispose()
     {
@@ -215,9 +229,17 @@ public class ActionHandler
     /// <summary>
     /// Tells program to dispose this object at the end of the frame
     /// </summary>
-    public void Dispose()
+    public virtual void Dispose()
     {
-        GCon.game.ItemsToBeDestroyed.Add(this);
+        if (this is Item)
+        {
+            GCon.game.ItemsToBeDestroyed.Add(this);
+        }
+        if (this is UIItem u)
+        {
+            ToolsUI.UIItemsToBeDestroyed.Add(u);
+        }
+
     }
 
     public virtual void OnLevelLeave()
@@ -269,6 +291,7 @@ public class ActionHandler
     }
     public virtual void OnLevelEnter()
     {
+        IsInLevel = true;
         bool getRunning = false;
         foreach (var action in actionsFrozen)
         {

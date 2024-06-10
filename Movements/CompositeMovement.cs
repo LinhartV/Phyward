@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using UnityEngine;
 
 /// <summary>
-/// Movement composed of multiple movements with preset speed. Speeds of partial movements will determine the direction
+/// Movement composed of multiple movements with preset Speed. Speeds of partial movements will determine the direction
 /// </summary>
 public class CompositeMovement : IMovement
 {
@@ -17,9 +17,9 @@ public class CompositeMovement : IMovement
     [JsonProperty]
     public Dictionary<string, IMovement> partialMovements = new Dictionary<string, IMovement>();
     /// <summary>
-    /// Movement composed of multiple movements with preset speed. Speeds of partial movements will determine the direction
+    /// Movement composed of multiple movements with preset Speed. Speeds of partial movements will determine the direction
     /// </summary>
-    /// <param name="thisMovement">Movement, that will determine the speed (partial movements are just for direction)</param>
+    /// <param name="thisMovement">Movement, that will determine the Speed (partial movements are just for direction)</param>
     /// <param name="movements">Partial movements which will set the direction of the final movement</param>
     public CompositeMovement(IMovement thisMovement, Dictionary<string, IMovement> movements) : base(0, 0, false)
     {

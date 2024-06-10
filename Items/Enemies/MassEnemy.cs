@@ -28,7 +28,7 @@ public class MassEnemy : Enemy
     {
         List<ToolsPhyward.Drop> l = new List<ToolsPhyward.Drop>
         {
-            new ToolsPhyward.Drop(1, 5, 1, () => { return new Unit(Units.time, GameObjects.mass); })
+            new ToolsPhyward.Drop(1, 5, 1, () => { return new Unit(Units.Mass()); })
         };
         ToolsPhyward.DropDrops(l, this.Prefab.transform.position);
     }

@@ -14,14 +14,16 @@ public abstract class Character : Movable
     public float CharDamage { get; set; }
     public float CharShotSpeed { get; set; }
     public float CharShotDuration { get; set; }
+    public float CharDispersion { get; set; }
     public float Lives { get; private set; }
     public float MaxLives { get; set; }
     public float CharReloadTime { get; set; }
     [JsonProperty]
     private IWeapon weapon;
     [JsonIgnore]
-    private LineRenderer fillBar;
-    private LineRenderer damagebar;
+    protected LineRenderer fillBar;
+    [JsonIgnore]
+    protected LineRenderer damagebar;
     public IWeapon Weapon
     {
         get { return weapon; }
@@ -35,17 +37,17 @@ public abstract class Character : Movable
         }
     }
     public Character() { }
-    public Character((float, float) pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isFriendly, bool isSolid, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, isSolid, map)
+    public Character(Vector2 pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isFriendly, bool isSolid, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, isSolid, map)
     {
-        Controctur(isFriendly, charDamage, charReloadTime, lives, charShotSpeed, charShotDuration, weapon);
+        Constructor(isFriendly, charDamage, charReloadTime, lives, charShotSpeed, charShotDuration, weapon);
     }
 
     protected Character(float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isFriendly, bool isSolid) : base(baseSpeed, acceleration, friction, prefab, isSolid)
     {
-        Controctur(isFriendly, charDamage, charReloadTime, lives, charShotSpeed, charShotDuration, weapon);
+        Constructor(isFriendly, charDamage, charReloadTime, lives, charShotSpeed, charShotDuration, weapon);
     }
 
-    private void Controctur(bool isFriendly, float charDamage, float charReloadTime, float lives, float charShotSpeed, float charShotDuration, IWeapon weapon)
+    private void Constructor(bool isFriendly, float charDamage, float charReloadTime, float lives, float charShotSpeed, float charShotDuration, IWeapon weapon)
     {
         this.IsFriendly = isFriendly;
         this.CharDamage = charDamage;
@@ -93,7 +95,7 @@ public abstract class Character : Movable
     {
         if (MaxLives != 0)
         {
-            damagebar.SetPositions(new Vector3[2] { new Vector3(-0.5f + 1 * Lives / MaxLives, 0.675f, 0), new Vector3(0.5f, 0.675f, 0) });
+            damagebar.SetPositions(new Vector3[2] { new Vector3(fillBar.GetPosition(0).x + (fillBar.GetPosition(1).x- fillBar.GetPosition(0).x) * Lives / MaxLives, fillBar.GetPosition(1).y, 0), new Vector3(fillBar.GetPosition(1).x, fillBar.GetPosition(1).y, 0) });
         }
     }
     /// <summary>

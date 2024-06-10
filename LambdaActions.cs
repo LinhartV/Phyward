@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 using static UnityEngine.RuleTile.TilingRuleOutput;
 
 /// <summary>
@@ -23,7 +24,9 @@ public static class LambdaActions
     {
         lambdaActions.Add("receiveDamage", (item, parameter) =>
         {
-            (item as Character).ChangeLives(-(float)parameter[0]);
+            var character = (item as Character);
+            float difference = (float)Convert.ToDouble(parameter[0]);
+            character.ChangeLives(-difference);
         });
         lambdaActions.Add("randomWalk", (item, parameter) =>
         {
@@ -89,6 +92,50 @@ public static class LambdaActions
                 var angle = ToolsMath.PolarToCartesian((item as Item).Angle, 1);
                 (item as Item).Prefab.GetComponentInChildren<SpriteRenderer>().transform.up = new Vector2(angle.Item1, angle.Item2);
             }
+        });
+        lambdaActions.Add("followCursor", (item, parameter) =>
+        {
+            (item as UIItem).Go.transform.position = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        });
+        lambdaActions.Add("unfreeze", (item, parameter) =>
+        {
+            GCon.freezeCamera = false;
+        });
+        lambdaActions.Add("ShowDescription", (item, parameter) =>
+        {
+            if (item==null || (item as SlotTemplate).Go == null || !(item as SlotTemplate).Go.activeInHierarchy)
+            {
+                item.DeleteAction("ShowDescription");
+                return;
+            }
+            var ui = (item as SlotTemplate).SlotableRef;
+            ToolsUI.descriptionPanel.Go.SetActive(true);
+            ToolsUI.descriptionPanel.Go.transform.position = /*Camera.main.ScreenToWorldPoint(new Vector3(0, 0)) +*/ (item as UIItem).Go.transform.position;
+            var rect = ToolsUI.descriptionPanel.Go.GetComponent<RectTransform>();
+
+
+
+            if (Camera.main.WorldToScreenPoint(new Vector3(0, rect.position.y - 0.5f * rect.rect.height)).y < 0)
+            {
+                ToolsUI.descriptionPanel.Go.transform.position = new Vector3(ToolsUI.descriptionPanel.Go.transform.position.x, Camera.main.ScreenToWorldPoint(new Vector3(0, 0)).y + 0.5f * rect.rect.height);
+            }
+            if (Camera.main.WorldToScreenPoint(new Vector3(0, rect.position.y + 0.5f * rect.rect.height)).y > Screen.height)
+            {
+                ToolsUI.descriptionPanel.Go.transform.position = new Vector3(ToolsUI.descriptionPanel.Go.transform.position.x, Camera.main.ScreenToWorldPoint(new Vector3(0, Screen.height)).y - 0.5f * rect.rect.height);
+            }
+            if (Camera.main.WorldToScreenPoint(new Vector3(rect.position.x - 0.5f * rect.rect.width, 0)).x < 0)
+            {
+                ToolsUI.descriptionPanel.Go.transform.position = new Vector3(Camera.main.ScreenToWorldPoint(new Vector3(0, 0)).x + 0.5f * rect.rect.width, ToolsUI.descriptionPanel.Go.transform.position.y);
+            }
+            if (Camera.main.WorldToScreenPoint(new Vector3(rect.position.x + 0.5f * rect.rect.width, 0)).x > Screen.width)
+            {
+                ToolsUI.descriptionPanel.Go.transform.position = new Vector3(Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, 0)).x - 0.5f * rect.rect.width, ToolsUI.descriptionPanel.Go.transform.position.y);
+            }
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            ToolsUI.descriptionPanel.Go.transform.GetChild(0).gameObject.GetComponent<TMPro.TextMeshProUGUI>().text = ui.Name;
+            ToolsUI.descriptionPanel.Go.transform.GetChild(1).gameObject.GetComponent<TMPro.TextMeshProUGUI>().text = ui.Subheading;
+            ToolsUI.descriptionPanel.Go.transform.GetChild(2).gameObject.GetComponent<TMPro.TextMeshProUGUI>().text = ui.Description;
+            ToolsUI.descriptionPanel.Go.transform.GetChild(3).gameObject.GetComponent<Image>().sprite = ui.Prefab.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite;
         });
     }
     public static void ExecuteAction(string actionName, ActionHandler item, params object[] parameters)

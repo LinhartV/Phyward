@@ -10,15 +10,19 @@ using UnityEngine.Tilemaps;
 /// Class for managing exits from a particular level.
 /// </summary>
 [Serializable]
-public class Base : Item
+public class Base : Item, IInteractable
 {
     public Base() { }
 
-    public Base((float, float) pos, Tilemap map = null) : base(pos, GameObjects.exit, false, map)
+    public Base(Vector2 pos, Tilemap map = null) : base(pos, GameObjects.baseHouse, false, map)
     {
-
+        this.Prefab.transform.position = new Vector3(pos.x, pos.y, 1);
     }
 
+    public void Interact()
+    {
+        ToolsUI.baseInventory.OpenInventory();
 
+    }
 }
 

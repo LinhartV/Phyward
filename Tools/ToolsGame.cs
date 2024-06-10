@@ -19,8 +19,7 @@ public static class ToolsGame
     /// For each element of PlayerActionEnum assign lambda function for keyPress and keyRelease by name.
     /// </summary>
     public static Dictionary<PlayerActionsEnum, (Action, Action)> actions = new();
-
-    public enum PlayerActionsEnum { none = 0, moveUp = 1, moveDown = 2, moveLeft = 3, moveRight = 4, fire = 5, abilityQ = 6, abilityE = 7, other = 8, cheat = 9 }
+    public enum PlayerActionsEnum { none = 0, moveUp = 1, moveDown = 2, moveLeft = 3, moveRight = 4, fire = 5, abilityQ = 6, abilityE = 7, other = 8, cheat = 9, inventory = 10, deselect = 11, interact = 12, closing = 13 }
 
     public enum MazeTile
     {
@@ -30,6 +29,15 @@ public static class ToolsGame
         block
     }
 
+    /// <summary>
+    /// Setup for testing purposes
+    /// </summary>
+    public static void DebugSetup()
+    {
+
+        GCon.game.Player.PlayerControl.DiscoverNewUnit(Units.time);
+        GCon.game.Player.PlayerControl.DiscoverNewUnit(Units.mass);
+    }
 
     public static void CreateGame()
     {
@@ -38,9 +46,27 @@ public static class ToolsGame
 
         GCon.game.CurBiom = GCon.game.bioms[0];
         GCon.game.CurLevel = GCon.game.CurBiom.levels[0];
-        GCon.game.Player = (new Player(GCon.game.CurLevel.GetEmptyPosition(), 4f, 50, 25f, new BasicWeapon(ToolsMath.SecondsToFrames(1), 10, 5, ToolsMath.SecondsToFrames(1), GameObjects.redSmallShot), 1, 1, 1, 1, 100));
+        GCon.game.Player = (new Player(GCon.game.CurLevel.GetEmptyPosition(), 4f, 50, 25f, null/*new BasicWeapon(ToolsMath.SecondsToFrames(1), 10, 5, ToolsMath.SecondsToFrames(1), GameObjects.redSmallShot)*/, 1, 1, 1, 1, 100));
 
     }
+    /// <summary>
+    /// Pauses or resumes all IPausables objects
+    /// </summary>
+    /// <param name="pauseOn">Whether to pause (true) or resume (false)</param>
+    public static void PausePausables(bool pauseOn)
+    {
+        foreach (var item in GCon.game.Items.Values)
+        {
+            if (item is IPausable p)
+            {
+                p.TriggerPause(pauseOn);
+            }
+        }
+    }
+
+   
+
+
 
     public static void DefaultAssignOfKeys()
     {
@@ -49,9 +75,14 @@ public static class ToolsGame
         KeyController.AddKey(KeyCode.D, new RegisteredKey(PlayerActionsEnum.moveRight), KeyCode.RightArrow);
         KeyController.AddKey(KeyCode.A, new RegisteredKey(PlayerActionsEnum.moveLeft), KeyCode.LeftArrow);
         KeyController.AddKey(KeyCode.C, new RegisteredKey(PlayerActionsEnum.cheat));
+        KeyController.AddKey(KeyCode.I, new RegisteredKey(PlayerActionsEnum.inventory, RegisteredKey.PauseType.both));
         KeyController.AddKey(KeyCode.E, new RegisteredKey(PlayerActionsEnum.abilityE));
         KeyController.AddKey(KeyCode.Q, new RegisteredKey(PlayerActionsEnum.abilityQ));
         KeyController.AddKey(KeyCode.Space, new RegisteredKey(PlayerActionsEnum.fire), KeyCode.Mouse0);
+        KeyController.AddKey(KeyCode.Mouse0, new RegisteredKey(PlayerActionsEnum.deselect, RegisteredKey.PauseType.onPause));
+        KeyController.AddKey(KeyCode.F, new RegisteredKey(PlayerActionsEnum.interact, RegisteredKey.PauseType.onResume));
+        KeyController.AddKey(KeyCode.F, new RegisteredKey(PlayerActionsEnum.closing, RegisteredKey.PauseType.onPause), KeyCode.Escape);
+
     }
 
     public static void SetupActions()
@@ -120,6 +151,46 @@ public static class ToolsGame
             }
         }
         ));
+
+
+        actions.Add(PlayerActionsEnum.inventory, (() =>
+        {
+            ToolsUI.TriggerInventory(false);
+        }, () =>
+        {
+        }
+        ));
+        actions.Add(PlayerActionsEnum.deselect, (() =>
+        {
+        }, () =>
+        {
+            ToolsUI.DropDraggedObject();
+
+        }
+        ));
+        actions.Add(PlayerActionsEnum.interact, (() =>
+        {
+            GCon.lastInteractable?.Interact();
+        }, () =>
+        {
+
+        }
+        ));
+        actions.Add(PlayerActionsEnum.closing, (() =>
+        {
+            ToolsUI.TriggerInventory(true);
+        }, () =>
+        {
+        }
+        ));
+    }
+
+    public static void SetupGameAfterLoad()
+    {
+
+        GCon.gameActionHandler = new ActionHandler(true);
+        DebugSetup();
+        ToolsUI.SetupUI();
     }
 
     public static void SetupGame()
@@ -128,6 +199,8 @@ public static class ToolsGame
         SetupActions();
         ToolsPhyward.InstantiateEnemyInfos();
         LambdaActions.SetupLambdaActions();
+        ToolsPhyward.InstantiateAllCraftables();
+        AllCrafts.SetupAllCrafts();
 
 #if PREDICTED
         string[] txt = File.ReadAllLines(PATH);
@@ -163,6 +236,13 @@ public static class ToolsGame
     public static int Rng(int upperBound)
     {
         return Rng(0, upperBound);
+    }
+    public static float NormalRng(float mean, float stdDev)
+    {
+        float u1 = 1.0f - Rng();
+        float u2 = 1.0f - Rng();
+        float randStdNormal = (float)(Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Sin(2.0 * Math.PI * u2)); //random normal(0,1)
+        return mean + stdDev * randStdNormal; //random normal(mean,stdDev^2)
     }
     public static float Rng()
     {
