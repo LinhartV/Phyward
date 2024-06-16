@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 using static ToolsGame;
 
 /// <summary>
@@ -11,7 +12,7 @@ using static ToolsGame;
 [Serializable]
 public class GameControl
 {
-    public GameControl() {}
+    public GameControl() { }
     public string PlayerName { get; set; }
     //public Dictionary<int, Level> Levels { get;private set; } = new Dictionary<int, Level>();
     /// <summary>
@@ -39,16 +40,38 @@ public class GameControl
     /// </summary>
     public Dictionary<int, Item> Items { get; set; } = new Dictionary<int, Item>();
     /// <summary>
-    /// List of items for which will be called update (e. g. Exits are not here)
+    /// All items where ExecuteActions will be triggered
     /// </summary>
-    public Dictionary<int, ActionHandler> ItemsStep { get; set; } = new Dictionary<int, ActionHandler>();
+    private Dictionary<ToolsSystem.PauseType, GameSystem> itemStep = new();
+
     public Biom CurBiom { get; set; }
-    
+
+    public ActionHandler gameActionHandler;
     public Level CurLevel { get; set; }
     public Player Player { get; set; }
     public GameControl(string playerName)
     {
         PlayerName = playerName;
+        itemStep.Add(ToolsSystem.PauseType.InGame, new GameSystem());
+        itemStep.Add(ToolsSystem.PauseType.Inventory, new GameSystem(() =>
+        {
+            foreach (var item in ToolsUI.UIItems)
+            {
+                item.OnLevelEnter();
+            }
+        }, () =>
+        {
+            foreach (var item in ToolsUI.UIItems)
+            {
+                item.OnLevelLeave();
+            }
+        }));
+        itemStep.Add(ToolsSystem.PauseType.Animation, new GameSystem());
+    }
+
+    public void ActivateThisGame()
+    {
+        GCon.gameSystems.AddRange(GCon.game.itemStep);
     }
 
 }

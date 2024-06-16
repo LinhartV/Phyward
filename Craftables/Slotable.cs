@@ -12,12 +12,9 @@ using static System.Net.Mime.MediaTypeNames;
 /// Everything I can have in player slot
 /// </summary>
 [Serializable]
-public abstract class Slotable : IComparable<Slotable>
+public abstract class Slotable : ICollectableRef, IComparable<Slotable>
 {
-    [JsonIgnore]
-    public GameObject Prefab { get; set; }
-    [JsonProperty]
-    private string prefabName;
+
     [JsonProperty]
     public ToolsUI.FilterType filter { get; private set; }
     public string Description { get; private set; }
@@ -31,23 +28,26 @@ public abstract class Slotable : IComparable<Slotable>
     /// </summary>
     private int count;
     public int Count { get => count; set { count = value; } }
+    /// <summary>
+    /// Whether there can be more duplicates on this slot
+    /// </summary>
     public bool Stackable { get; protected set; }
+    /// <summary>
+    /// Whether to exchange slot with other Slotable on drop
+    /// </summary>
+    public bool Exchangable { get; protected set; }
+
     public Slotable() { }
 
-    public Slotable(string name, string subheading, string description, ToolsUI.FilterType filter, GameObject prefab, bool stackable = false)
+    public Slotable(string name, string subheading, string description, ToolsUI.FilterType filter, GameObject prefab, bool stackable = false, bool exchangable = false) : base(prefab)
     {
         this.filter = filter;
-        Prefab = prefab;
-        prefabName = prefab.name;
         Description = description;
         Name = name;
         Subheading = subheading;
         Stackable = stackable;
         Count = 1;
-    }
-    public virtual void AssignPrefab()
-    {
-        Prefab = GameObjects.GetPrefabByName(this.prefabName);
+        Exchangable = exchangable;
     }
 
 
@@ -62,7 +62,7 @@ public abstract class Slotable : IComparable<Slotable>
                     return 1;
                 else if (tp.unitNumeratorList.Count + tp.unitDenominatorList.Count == op.unitNumeratorList.Count + op.unitDenominatorList.Count)
                 {
-                    return prefabName.CompareTo(other.prefabName);
+                    return PrefabName.CompareTo(other.PrefabName);
                 }
                 else
                     return -1;
@@ -71,14 +71,14 @@ public abstract class Slotable : IComparable<Slotable>
             {
                 if (tc.Tier == oc.Tier)
                 {
-                    return prefabName.CompareTo(other.prefabName);
+                    return PrefabName.CompareTo(other.PrefabName);
                 }
                 else
                     return tc.Tier.CompareTo(oc.Tier);
             }
             else
             {
-                return prefabName.CompareTo(other.prefabName);
+                return PrefabName.CompareTo(other.PrefabName);
             }
         }
         else

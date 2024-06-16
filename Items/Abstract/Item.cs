@@ -17,7 +17,7 @@ public abstract class Item : ActionHandler
     {
     }
 
-    public Item(Vector2 pos, GameObject prefab, bool isSolid = false, Tilemap map = null) : base(true)
+    public Item(Vector2 pos, GameObject prefab, bool isSolid = false, Tilemap map = null) : base(true, ToolsSystem.PauseType.InGame)
     {
         this.prefabName = prefab.name;
         this.IsSolid = isSolid;
@@ -26,7 +26,7 @@ public abstract class Item : ActionHandler
         GCon.game.Items.Add(Id, this);
         SetupItem();
     }
-    public Item(GameObject prefab, bool isSolid = false) : base(true)
+    public Item(GameObject prefab, bool isSolid = false) : base(true, ToolsSystem.PauseType.InGame)
     {
         this.prefabName = prefab.name;
         this.IsSolid = isSolid;
@@ -59,6 +59,9 @@ public abstract class Item : ActionHandler
     private string tilemapName;
     [JsonProperty]
     private string prefabName;
+    /// <summary>
+    /// For checking collisions
+    /// </summary>
     [JsonIgnore]
     public bool IsTriggered { get; set; }
     [JsonProperty]

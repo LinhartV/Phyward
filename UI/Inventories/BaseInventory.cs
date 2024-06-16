@@ -21,6 +21,7 @@ public class BaseInventory : Inventory
     /// Slots in backpackSlots
     /// </summary>
     public List<SlotTemplate> backpackSlots = new List<SlotTemplate>();
+    private GameObject scrollbarCrafting;
     private SlotTemplate stackToBase;
     private UIItem craftingSpace;
     public UIItem baseInventory;
@@ -46,7 +47,7 @@ public class BaseInventory : Inventory
         return false;
     }
 
-    
+
 
     private void SetupInventorySlots()
     {
@@ -98,7 +99,7 @@ public class BaseInventory : Inventory
                     GCon.game.Player.PlayerControl.backpack.Add(ToolsUI.draggedSlot.SlotableRef);
                     GCon.game.Player.PlayerControl.RemoveFromBase(ToolsUI.draggedSlot.SlotableRef);
                     UpdateInventory();
-                });
+                }, null, true);
                 backpackSlots.Add(slotUI);
             }
             if (doubleBreak)
@@ -154,7 +155,7 @@ public class BaseInventory : Inventory
                     GCon.game.Player.PlayerControl.RemoveFromBackpack(ToolsUI.draggedSlot.SlotableRef);
                     GCon.game.Player.PlayerControl.AddSlotableToBase(ToolsUI.draggedSlot.SlotableRef);
                     UpdateInventory();
-                });
+                }, null, true);
                 baseSlots.Add(slotUI);
             }
             if (doubleBreak)
@@ -176,6 +177,12 @@ public class BaseInventory : Inventory
     }
     public override void UpdateInventory()
     {
+        PutUnitsToBase();
+        SetupInventorySlots();
+        UpdateCraftingMenu();
+    }
+    private void PutUnitsToBase()
+    {
         List<Slotable> temp = new List<Slotable>(GCon.game.Player.PlayerControl.backpack);
         for (int i = 0; i < temp.Count; i++)
         {
@@ -185,19 +192,25 @@ public class BaseInventory : Inventory
                 GCon.game.Player.PlayerControl.backpack.Remove(temp[i]);
             }
         }
-        SetupInventorySlots();
-        UpdateCraftingMenu();
     }
     protected override void SetupInventory()
     {
+
         baseInventory = new UIItem(GameObject.FindGameObjectWithTag("BaseInventory"));
         baseInventory.Go.SetActive(true);
         baseInventory.Go.transform.position = new Vector3(0, baseInventory.Go.transform.position.y);
+        scrollbarCrafting = GameObject.Find("ScrollbarCrafting");
 
         SetupInventorySlots();
         SetupPresetSlots();
         SetupCraftingButtons();
         SetupFilterButtons();
+    }
+
+    private void UpdateScrollBarCrafting()
+    {
+        Scrollbar bar = scrollbarCrafting.GetComponent<Scrollbar>();
+        bar.size = 0.2f;//craftingSpace.Go.GetComponent<RectTransform>().rect.height / ;
     }
     private void SetupPresetSlots()
     {
@@ -213,7 +226,7 @@ public class BaseInventory : Inventory
             }
             //slot.RemoveSlotable();
             UpdateInventory();
-        });
+        }, null, true);
         stackToBase = new SlotTemplate(GameObject.FindGameObjectWithTag("StackToBase"), true, false, false, null, null, null);
         stackToBase.OnMouseDown = (UIItem slot) =>
         {
@@ -237,7 +250,7 @@ public class BaseInventory : Inventory
         for (int i = 0; i < 4; i++)
         {
             craftingFilters[i] = new ButtonTemplate(GameObject.FindGameObjectWithTag("CraftingFilters").transform.GetChild(i).gameObject, true, true);
-            
+
             if (i == 0)
             {
                 craftingFilters[i].OnMouseDownDefault();
@@ -271,11 +284,17 @@ public class BaseInventory : Inventory
     }
     public void UpdateCraftingMenu()
     {
-        foreach (var item in craftableSlots)
+        var temp = new List<UIItem>(craftableSlots);
+        foreach (var item in temp)
         {
             item.Dispose();
+            GameObject.Destroy(item.Go);
         }
         craftableSlots.Clear();
+        GCon.game.Player.PlayerControl.craftables.Sort((x, y) =>
+        {
+            return x.Tier.CompareTo(y.Tier);
+        });
         float offset = 30;
         for (int i = 0; i < GCon.game.Player.PlayerControl.craftables.Count; i++)
         {
@@ -290,23 +309,24 @@ public class BaseInventory : Inventory
             var rect = craftable.GetComponent<RectTransform>().rect;
             craftable.transform.localPosition = new Vector3(0, -i * (rect.height + 50) - rect.height - offset);
             craftable.transform.localScale = new Vector3(1, 1, 1);
-            var craftableSlot = new SlotTemplate(craftable.transform.GetChild(1).gameObject, true, false, false, null, null, null);
+            var craftableSlot = new SlotTemplate(craftable.transform.GetChild(2).gameObject, true, false, false, null, null, null);
             craftableSlot.AddSlotable(craftableItem, false);
             for (int j = 0; j < craftableItem.NeededMaterials.Length; j++)
             {
                 var unit = GameObject.Instantiate(GameObjects.GetPrefabByName(craftableItem.NeededMaterials[j].Item1.Prefab.name));
                 var unitRect = unit.AddComponent<RectTransform>();
                 var image = unit.transform.GetChild(0).gameObject.AddComponent<Image>();
+                image.preserveAspect = true;
                 image.sprite = unit.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite;
                 Component.Destroy(unit.transform.GetChild(0).GetComponent<SpriteRenderer>());
                 unitRect.anchorMax = new Vector2(0, 0.5f);
                 unitRect.anchorMin = new Vector2(0, 0.5f);
                 unitRect.pivot = new Vector2(0, 0.5f);
-                unit.transform.SetParent(craftable.transform.GetChild(2).GetChild(0));
+                unit.transform.SetParent(craftable.transform.GetChild(1).GetChild(0));
                 unit.transform.localPosition = new Vector3(j * 95, 0);
                 unit.transform.localScale = new Vector3(1, 1, 1);
                 unit.transform.GetChild(0).localScale = new Vector3(90, 90, 90);
-                var textPrefab = GameObject.Instantiate(GameObjects.counter);
+                var textPrefab = GameObject.Instantiate(GameObjects.text);
                 var text = textPrefab.GetComponent<TMPro.TextMeshProUGUI>();
                 text.text = GCon.game.Player.PlayerControl.unitCount[craftableItem.NeededMaterials[j].Item1.Name].ToString() + "/" + craftableItem.NeededMaterials[j].Item2.ToString();
                 textPrefab.transform.SetParent(unit.transform);
@@ -323,7 +343,7 @@ public class BaseInventory : Inventory
                 }
             }
             var uicraftable = new UIItem(craftable);
-            uicraftable.AddTransition(new Lerpable(0.1f, new Vector2(0, 10), null, true, true), "hover");
+            uicraftable.AddTransition(new Scalable(0.15f, new Vector2(0.05f, 0.05f), ToolsUI.easeOut, true), "hover");
             uicraftable.OnMouseEnter = (UIItem item) =>
             {
                 item.StartTransition("hover");
@@ -338,11 +358,25 @@ public class BaseInventory : Inventory
             {
                 if (GCon.game.Player.PlayerControl.Craft(craftableItem))
                 {
-                    UpdateInventory();
+                    int negativeCount = 0;
+                    foreach (var slot in GCon.game.Player.PlayerControl.inBase)
+                    {
+                        if (!(ToolsUI.filter == slot.filter || ToolsUI.filter == ToolsUI.FilterType.all || (slot.filter == ToolsUI.FilterType.armor && ToolsUI.filter == ToolsUI.FilterType.weapons)))
+                        {
+                            negativeCount++;
+                        }
+                    }
+                    GCon.AddPausedType(ToolsSystem.PauseType.Animation);
+                    ToolsUI.AnimateSettingSlotable(1f, baseSlots[GCon.game.Player.PlayerControl.inBase.Count - negativeCount - 1].Go, craftableSlot.SlotableRef.Prefab, () =>
+                    {
+                        UpdateInventory();
+                        GCon.PopPausedType();
+                    }, true);
                 }
             };
             craftableSlots.Add(new UIItem(craftable));
         }
+        UpdateScrollBarCrafting();
     }
 
     public override void LoadUI()
@@ -375,7 +409,8 @@ public class BaseInventory : Inventory
                     ToolsUI.filter = ToolsUI.FilterType.weapons;
                 if (b.Go.name == "Bonuses")
                     ToolsUI.filter = ToolsUI.FilterType.bonuses;
-                UpdateInventory();
+                PutUnitsToBase();
+                SetupInventorySlots();
                 foreach (var button in filterButtons)
                 {
                     if (button != b)

@@ -14,6 +14,7 @@ public class UnitCraftInventory : Inventory
     private ButtonTemplate craft;
     private GameObject divider;
     private GameObject fraction;
+    private GameObject scrollPanel;
     private List<SlotTemplate> numeratorSlots = new List<SlotTemplate>();
     private List<SlotTemplate> denominatorSlots = new List<SlotTemplate>();
     private List<PreUnit> numeratorUnits = new List<PreUnit>();
@@ -36,6 +37,7 @@ public class UnitCraftInventory : Inventory
         {
             panel.StartTransition("reveal");
             UpdateUnitsInventory();
+            UpdateScrolls();
             return true;
         }
         return false;
@@ -50,25 +52,54 @@ public class UnitCraftInventory : Inventory
     protected override void SetupInventory()
     {
         //UpdateInventory();
+        scrollPanel = GameObject.FindGameObjectWithTag("ScrollList");
         fraction = GameObject.FindGameObjectWithTag("Fraction");
-        result = new SlotTemplate(GameObject.FindGameObjectWithTag("Result"), true, false, false);
+        result = new SlotTemplate(GameObject.FindGameObjectWithTag("Result"), false, false, false);
         divider = GameObject.FindGameObjectWithTag("Fraction").transform.GetChild(1).gameObject;
         craft = new ButtonTemplate(GameObject.FindGameObjectWithTag("Submit"), true, false);
+        craft.AddTransition(new ColorChangable(0.2f, new Color(255, -10, -10, 0), null, true, () => { craft.ReturnTransition("clickWrong"); }), "clickWrong");
+        craft.AddTransition(new ColorChangable(0.3f, new Color(-10, 255, -10, 0), null, true, () => { craft.ReturnTransition("clickRight"); }), "clickRight");
         craft.OnMouseDown = (UIItem item) =>
         {
+
             var unit = Units.ComposeUnit(numeratorUnits, denominatorUnits);
-            if (GCon.game.Player.PlayerControl.discoveredUnits.Any(x => x.Name == unit.Name))
+
+            if (unit != null && GCon.game.Player.PlayerControl.discoveredUnits.Any(x => x.Name == unit.Name))
             {
+                craft.StartTransition("clickRight", true);
+                GCon.AddPausedType(ToolsSystem.PauseType.Animation);
                 GCon.game.Player.PlayerControl.AddSlotableToBase(unit);
-                foreach (var material in numeratorUnits)
+                Action<SlotTemplate> animate = (SlotTemplate slot) =>
                 {
-                    GCon.game.Player.PlayerControl.SpendMaterial(material, 1);
-                }
-                foreach (var material in denominatorUnits)
+                    ToolsUI.AnimateSettingSlotable(0.8f, ToolsUI.wrapPanel.Go.transform.InverseTransformPoint(result.Go.transform.position), slot.SlotableRef.Prefab, () => { }, true);
+                    slot.RemoveSlotable();
+                };
+                for (int i = 0; i < numeratorUnits.Count; i++)
                 {
-                    GCon.game.Player.PlayerControl.SpendMaterial(material, 1);
+                    GCon.game.Player.PlayerControl.SpendMaterial(numeratorUnits[i], 1);
+                    animate(numeratorSlots[i]);
                 }
-                UpdateInventory();
+                for (int i = 0; i < denominatorUnits.Count; i++)
+                {
+                    GCon.game.Player.PlayerControl.SpendMaterial(denominatorUnits[i], 1);
+                    animate(denominatorSlots[i]);
+                }
+                ;
+                GCon.game.gameActionHandler.AddAction(new ItemAction((item, parameter) =>
+                {
+                    result.AddSlotable(unit);
+                    ToolsUI.AnimateSettingSlotable(0.7f, unitSlots.First(x => x.SlotableRef.Name == unit.Name).Go, result.SlotableRef.Prefab, () =>
+                    {
+                        UpdateInventory();
+                        GCon.PopPausedType();
+                    }, true);
+                    result.RemoveSlotable();
+                }, ToolsMath.SecondsToFrames(0.8f), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning, null, unit));
+                //UpdateInventory();
+            }
+            else
+            {
+                craft.StartTransition("clickWrong", true);
             }
         };
 
@@ -138,6 +169,38 @@ public class UnitCraftInventory : Inventory
         }
     }
 
+    private void UpdateScrolls()
+    {
+        foreach (Transform child in scrollPanel.transform)
+        {
+            GameObject.Destroy(child.gameObject);
+        }
+        var offsetCount = 0;
+        for (int i = 0; i < GCon.game.Player.PlayerControl.discoveredUnits.Count; i++)
+        {
+            var unit = GCon.game.Player.PlayerControl.discoveredUnits[i];
+            if (unit.originalUnitNumeratorList.Count != 0 || unit.originalUnitDenominatorList.Count != 0)
+            {
+                var scroll = GameObject.Instantiate(GameObjects.craftingScroll);
+                scroll.transform.SetParent(scrollPanel.transform);
+                scroll.transform.GetChild(0).GetComponent<UnityEngine.UI.Image>().sprite = unit.Prefab.GetComponentInChildren<SpriteRenderer>().sprite;
+                var rect = scroll.GetComponent<RectTransform>().rect;
+                scroll.transform.localScale = new Vector3(1, 1, 1);
+                scroll.transform.localPosition = new Vector3(-125, -50 - offsetCount * (rect.height + 50));
+                UIItem scrollUI = new UIItem(scroll);
+                scrollUI.AddTransition(new Scalable(0.2f, new Vector3(1.1f, 1.1f), ToolsUI.easeOut), "hover");
+                scrollUI.OnMouseEnter = (UIItem item) => { item.StartTransition("hover", true); ToolsUI.SetCursor(ToolsUI.selectCursor); };
+                scrollUI.OnMouseExit = (UIItem item) => { item.ReturnTransition("hover"); ToolsUI.SetCursor(ToolsUI.normalCursor); };
+                scrollUI.OnMouseDown = (UIItem item) =>
+                {
+                    scrollUI.OnMouseExitDefault();
+                    ToolsUI.TriggerScrollPanel(unit);
+                    GCon.AddPausedType(ToolsSystem.PauseType.Animation);
+                };
+                offsetCount++;
+            }
+        }
+    }
 
     private void UpdateFraction()
     {
@@ -157,11 +220,27 @@ public class UnitCraftInventory : Inventory
         //numerator
         for (int i = 0; i < numeratorUnits.Count + 1; i++)
         {
+            if (i > 3)
+            {
+                break;
+            }
             AddSlotToFraction(numeratorUnits, numeratorSlots, offset, slotWidth, offset, i, 0, divitorOffset);
         }
         for (int i = 0; i < denominatorUnits.Count + 1; i++)
         {
-            AddSlotToFraction(denominatorUnits, denominatorSlots, -3 * offset, slotWidth, offset, i, 1, divitorOffset);
+            if (i > 3)
+            {
+                break;
+            }
+            AddSlotToFraction(denominatorUnits, denominatorSlots, -3 * offset, slotWidth, offset, i, 2, divitorOffset);
+        }
+        if (numeratorSlots.Count == 1)
+        {
+            numeratorSlots[0].ChangePlaceHolder("1");
+        }
+        if (denominatorSlots.Count == 1)
+        {
+            denominatorSlots[0].ChangePlaceHolder("1");
         }
         divider.GetComponent<UILine>().line.EditPoint(1, new Point(new Vector3(divitorOffset - slotWidth / 2 + (slotWidth + offset) * Math.Max(numeratorSlots.Count, denominatorSlots.Count), 0, 0), Vector3.zero, Vector3.zero, 15)) /*divider.transform.position + new Vector3((slotWidth + offset * 2) / slotWidth * Math.Max(numeratorSlots.Count, denominatorSlots.Count)*/;
     }

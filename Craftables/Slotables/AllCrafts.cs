@@ -11,5 +11,6 @@ public static class AllCrafts
     public static void SetupAllCrafts()
     {
         craftables.AddRange(CraftedWeapons.craftedWeapons);
+        craftables.AddRange(CraftedEdibles.craftedEdibles);
     }
 }

@@ -11,10 +11,6 @@ using Unity.VisualScripting;
 /// </summary>
 public class RegisteredKey
 {
-    /// <summary>
-    /// When the key is active
-    /// </summary>
-    public enum PauseType { onPause, onResume, both };
     //whether the key is currently pressed or not
     public bool Pressed { get; set; } = false;
     //whether the functionality of this key is active of not
@@ -22,7 +18,7 @@ public class RegisteredKey
     /// <summary>
     /// whether this key is active while the game is running or is active when paused
     /// </summary>
-    public PauseType PauseTypeKey { get; set; }
+    public List<ToolsSystem.PauseType> pauseTypeKeys = new List<ToolsSystem.PauseType>();
     //actions assigned to each event
     public Action KeyDown { get; set; }
     public Action KeyUp { get; set; }
@@ -31,45 +27,46 @@ public class RegisteredKey
     /// <summary>
     /// Bind up new key to action
     /// </summary>
-    public RegisteredKey(ToolsGame.PlayerActionsEnum playerAction, PauseType pausedKey = PauseType.onResume)
+    public RegisteredKey(ToolsGame.PlayerActionsEnum playerAction, ToolsSystem.PauseType pauseType = ToolsSystem.PauseType.InGame, params ToolsSystem.PauseType[] pauseTypes)
     {
         this.KeyDown = () =>
         {
             if (Pressed == false)
             {
                 Pressed = true;
-                
+
                 if (ToolsGame.actions.ContainsKey(playerAction))
                 {
                     ToolsGame.actions[playerAction].Item1();
                 }
-                
+
             }
         };
         this.KeyUp = () =>
         {
             Pressed = false;
-            
+
             if (ToolsGame.actions.ContainsKey(playerAction))
             {
                 ToolsGame.actions[playerAction].Item2();
             }
-            
+
         };
-        PauseTypeKey = pausedKey;
+        pauseTypeKeys.Add(pauseType);
+        pauseTypeKeys.AddRange(pauseTypes);
     }
 
     /// <summary>
     /// Bind up new key to action
     /// </summary>
-    public RegisteredKey(string actionPress, string actionRelease, ActionHandler item, PauseType pausedKey = PauseType.onResume)
+    public RegisteredKey(string actionPress, string actionRelease, ActionHandler item, ToolsSystem.PauseType pauseType = ToolsSystem.PauseType.InGame, params ToolsSystem.PauseType[] pauseTypes)
     {
         this.KeyDown = () =>
         {
             if (Pressed == false)
             {
                 Pressed = true;
-                if ((GCon.Paused && pausedKey != PauseType.onResume)|| (!GCon.Paused && pausedKey != PauseType.onPause))
+                if (pauseTypeKeys.Contains(GCon.GetPausedType()))
                 {
                     LambdaActions.ExecuteAction(actionPress, item);
                 }
@@ -77,13 +74,14 @@ public class RegisteredKey
         };
         this.KeyUp = () =>
         {
-            if ((GCon.Paused && pausedKey != PauseType.onResume) || (!GCon.Paused && pausedKey != PauseType.onPause))
+            if (pauseTypeKeys.Contains(GCon.GetPausedType()))
             {
                 LambdaActions.ExecuteAction(actionRelease, item);
             }
             Pressed = false;
         };
-        PauseTypeKey = pausedKey;
+        pauseTypeKeys.Add(pauseType);
+        pauseTypeKeys.AddRange(pauseTypes);
     }
 
 }

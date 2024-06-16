@@ -10,9 +10,6 @@ public class ButtonTemplate : UIItem
     public bool Selected { get; private set; } = false;
     public bool Hoverable { get; set; }
     private bool Selectable { get; set; }
-    public ButtonTemplate()
-    {
-    }
     /// <summary>
     /// 
     /// </summary>
@@ -21,7 +18,7 @@ public class ButtonTemplate : UIItem
     /// <param name="selectable">Whether this button can be selected</param>
     /// <param name="hoverTransition">Leave null for default transition</param>
     /// <param name="selectedTransition">Leave null for default transition</param>
-    public ButtonTemplate(GameObject go, bool hoverable, bool selectable, Transitable hoverTransition = null, Transitable selectedTransition = null) : base(go)
+    public ButtonTemplate(GameObject go, bool hoverable, bool selectable, Transitable hoverTransition = null, Transitable selectedTransition = null, ToolsSystem.PauseType pauseType = ToolsSystem.PauseType.Inventory) : base(go, pauseType)
     {
         this.Hoverable = hoverable;
         this.Selectable = selectable;
@@ -59,32 +56,41 @@ public class ButtonTemplate : UIItem
 
     public override void OnMouseEnterDefault()
     {
-        if (ToolsUI.DraggedSlot == null)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            base.OnMouseEnterDefault();
-            if (Hoverable)
+            if (ToolsUI.DraggedSlot == null)
             {
-                StartTransition("hover");
+                base.OnMouseEnterDefault();
+                if (Hoverable)
+                {
+                    StartTransition("hover", true);
+                }
             }
         }
         //ToolsUI.SetCursor(ToolsUI.selectCursor);
     }
     public override void OnMouseExitDefault()
     {
-        base.OnMouseExitDefault();
-        if (Hoverable)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            ReturnTransition("hover");
+            base.OnMouseExitDefault();
+            if (Hoverable)
+            {
+                ReturnTransition("hover");
+            }
         }
         //ToolsUI.SetCursor(ToolsUI.normalCursor);
     }
     public override void OnMouseDownDefault()
     {
-        base.OnMouseDownDefault();
-        if (Selectable && !Selected)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            Selected = true;
-            StartTransition("select");
+            base.OnMouseDownDefault();
+            if (Selectable && !Selected)
+            {
+                Selected = true;
+                StartTransition("select");
+            }
         }
     }
 }

@@ -30,9 +30,6 @@ public class TickButtonTemplate : UIItem
     }
     private Action onTicked;
     private Action offTicked;
-    public TickButtonTemplate()
-    {
-    }
 
     public TickButtonTemplate(GameObject go, bool ticked, Action onTicked, Action offTicked) : base(go, null)
     {
@@ -43,20 +40,29 @@ public class TickButtonTemplate : UIItem
 
     public override void OnMouseEnterDefault()
     {
-        if (ToolsUI.DraggedSlot == null)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            base.OnMouseEnterDefault();
+            if (ToolsUI.DraggedSlot == null)
+            {
+                base.OnMouseEnterDefault();
+            }
+            ToolsUI.SetCursor(ToolsUI.selectCursor);
         }
-        ToolsUI.SetCursor(ToolsUI.selectCursor);
     }
     public override void OnMouseExitDefault()
     {
-        base.OnMouseExitDefault();
-        ToolsUI.SetCursor(ToolsUI.normalCursor);
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
+        {
+            base.OnMouseExitDefault();
+            ToolsUI.SetCursor(ToolsUI.normalCursor);
+        }
     }
     public override void OnMouseDownDefault()
     {
-        base.OnMouseDownDefault();
-        Ticked = !Ticked;
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
+        {
+            base.OnMouseDownDefault();
+            Ticked = !Ticked;
+        }
     }
 }

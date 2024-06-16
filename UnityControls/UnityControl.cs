@@ -77,12 +77,25 @@ public class UnityControl : MonoBehaviour
     public GameObject crumblingRock;
     [SerializeField]
     public GameObject burningRock;
+    [SerializeField]
+    public GameObject scroll;
+    [SerializeField]
+    public GameObject area;
+    [SerializeField]
+    public GameObject volume;
+    [SerializeField]
+    public GameObject inertia;
+    [SerializeField]
+    public GameObject craftingScroll;
+    [SerializeField]
+    public GameObject medkit;
 
     // Start is called before the first frame update
     void Start()
     {
+
         ToolsUI.holdCursor = holdCursor; ToolsUI.selectCursor = selectCursor; ToolsUI.normalCursor = normalCursor; ToolsUI.aimCursor = aimCursor;
-        GameObjects.SetPrefabs(burningRock, crumblingRock, craftable, baseHouse, sling, blowgun, slingshot, counter, unitAnimation, slot, speed, frequency, mass, length, redSmallEnemy, healthBarStandard, purpleEnemy, time, redSmallShot, fireSwarmShot, exit, empty, player, blueShot, solidMap);
+        GameObjects.SetPrefabs(medkit,craftingScroll, inertia, volume, area, scroll, burningRock, crumblingRock, craftable, baseHouse, sling, blowgun, slingshot, counter, unitAnimation, slot, speed, frequency, mass, length, redSmallEnemy, healthBarStandard, purpleEnemy, time, redSmallShot, fireSwarmShot, exit, empty, player, blueShot, solidMap);
         ToolsUI.SetCursor(aimCursor);
         ToolsGame.SetupGame();
         ToolsSystem.StartGame("Try");
@@ -104,46 +117,29 @@ public class UnityControl : MonoBehaviour
     {
         if (GCon.GameStarted)
         {
-            if (!GCon.Paused)
+            List<ActionHandler> temp = new List<ActionHandler>(GCon.gameSystems[GCon.GetPausedType()].itemStep);
+            foreach (ActionHandler item in temp)
             {
-
-                Dictionary<int, ActionHandler> temp = new Dictionary<int, ActionHandler>(GCon.game.ItemsStep);
-                foreach (ActionHandler item in temp.Values)
-                {
-                    item.ExecuteActions(GCon.game.Now);
-                }
-                List<ActionHandler> tempDestroyed = new List<ActionHandler>(GCon.game.ItemsToBeDestroyed);
-                foreach (var item in tempDestroyed)
-                {
-                    item.InnerDispose();
-                }
-                GCon.game.ItemsToBeDestroyed.Clear();
-                List<Item> tempInactive = new List<Item>(GCon.game.ItemsToBeSetInactive);
-                foreach (var item in tempInactive)
-                {
-                    if (item.IsTriggered == false)
-                    {
-                        item.Prefab.SetActive(false);
-                        GCon.game.ItemsToBeSetInactive.Remove(item);
-                    }
-                }
-                GCon.game.Now++;
+                item.ExecuteActions(GCon.gameSystems[GCon.GetPausedType()].NowDifference);
             }
-
-            List<ActionHandler> tempDestroyedUI = new List<ActionHandler>(ToolsUI.UIItemsToBeDestroyed);
-            foreach (var item in tempDestroyedUI)
+            List<ActionHandler> tempDestroyed = new List<ActionHandler>(GCon.game.ItemsToBeDestroyed);
+            foreach (var item in tempDestroyed)
             {
                 item.InnerDispose();
             }
-            ToolsUI.UIItemsToBeDestroyed.Clear();
-            List<ActionHandler> tempUI = new List<ActionHandler>(ToolsUI.UIItemsStep);
-            foreach (ActionHandler item in tempUI)
+            GCon.game.ItemsToBeDestroyed.Clear();
+            List<Item> tempInactive = new List<Item>(GCon.game.ItemsToBeSetInactive);
+            foreach (var item in tempInactive)
             {
-                item.ExecuteActions(ToolsUI.nowUI);
+                if (item.IsTriggered == false)
+                {
+                    item.Prefab.SetActive(false);
+                    GCon.game.ItemsToBeSetInactive.Remove(item);
+                }
             }
             ToolsUI.TransitionTransitables(Time.deltaTime);
-            ToolsUI.nowUI++;
-            //Debug.Log(GCon.game.Now);
+            GCon.game.Now++;
+            GCon.gameSystems[GCon.GetPausedType()].NowDifference++;
         }
 
     }

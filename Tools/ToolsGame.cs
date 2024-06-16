@@ -13,7 +13,7 @@ using UnityEngine;
 public static class ToolsGame
 {
     private static System.Random rnd = new System.Random();
-    public static Queue<double> pseudoRand = new Queue<double>();
+    public static Queue<float> pseudoRand = new Queue<float>();
     private const string PATH = "./rng.txt";
     /// <summary>
     /// For each element of PlayerActionEnum assign lambda function for keyPress and keyRelease by name.
@@ -35,13 +35,12 @@ public static class ToolsGame
     public static void DebugSetup()
     {
 
-        GCon.game.Player.PlayerControl.DiscoverNewUnit(Units.time);
-        GCon.game.Player.PlayerControl.DiscoverNewUnit(Units.mass);
+        //GCon.game.Player.PlayerControl.DiscoverNewUnit(Units.speed);
     }
 
     public static void CreateGame()
     {
-        GCon.game.bioms.Add(new MeadowBiom("just.mp3", new LinearGenerator(5, 20, 0, false, 1, new BlockInsert(0.125f, new RandomSpawner((() => { return new TimeEnemy(1); }, 3), (() => { return new MassEnemy(1); }, 1))))));
+        GCon.game.bioms.Add(new MeadowBiom("just.mp3", new LinearGenerator(1, 20, 0, false, 1, new BlockInsert(0.125f, new RandomSpawner((() => { return new TimeEnemy(1); }, 3), (() => { return new MassEnemy(1); }, 1))))));
 
 
         GCon.game.CurBiom = GCon.game.bioms[0];
@@ -53,13 +52,13 @@ public static class ToolsGame
     /// Pauses or resumes all IPausables objects
     /// </summary>
     /// <param name="pauseOn">Whether to pause (true) or resume (false)</param>
-    public static void PausePausables(bool pauseOn)
+    public static void PausePausables(ToolsSystem.PauseType pauseType)
     {
         foreach (var item in GCon.game.Items.Values)
         {
             if (item is IPausable p)
             {
-                p.TriggerPause(pauseOn);
+                p.TriggerPause(pauseType);
             }
         }
     }
@@ -75,13 +74,13 @@ public static class ToolsGame
         KeyController.AddKey(KeyCode.D, new RegisteredKey(PlayerActionsEnum.moveRight), KeyCode.RightArrow);
         KeyController.AddKey(KeyCode.A, new RegisteredKey(PlayerActionsEnum.moveLeft), KeyCode.LeftArrow);
         KeyController.AddKey(KeyCode.C, new RegisteredKey(PlayerActionsEnum.cheat));
-        KeyController.AddKey(KeyCode.I, new RegisteredKey(PlayerActionsEnum.inventory, RegisteredKey.PauseType.both));
+        KeyController.AddKey(KeyCode.I, new RegisteredKey(PlayerActionsEnum.inventory, ToolsSystem.PauseType.Inventory, ToolsSystem.PauseType.InGame));
         KeyController.AddKey(KeyCode.E, new RegisteredKey(PlayerActionsEnum.abilityE));
         KeyController.AddKey(KeyCode.Q, new RegisteredKey(PlayerActionsEnum.abilityQ));
         KeyController.AddKey(KeyCode.Space, new RegisteredKey(PlayerActionsEnum.fire), KeyCode.Mouse0);
-        KeyController.AddKey(KeyCode.Mouse0, new RegisteredKey(PlayerActionsEnum.deselect, RegisteredKey.PauseType.onPause));
-        KeyController.AddKey(KeyCode.F, new RegisteredKey(PlayerActionsEnum.interact, RegisteredKey.PauseType.onResume));
-        KeyController.AddKey(KeyCode.F, new RegisteredKey(PlayerActionsEnum.closing, RegisteredKey.PauseType.onPause), KeyCode.Escape);
+        KeyController.AddKey(KeyCode.Mouse0, new RegisteredKey(PlayerActionsEnum.deselect, ToolsSystem.PauseType.Inventory));
+        KeyController.AddKey(KeyCode.F, new RegisteredKey(PlayerActionsEnum.interact, ToolsSystem.PauseType.InGame));
+        KeyController.AddKey(KeyCode.F, new RegisteredKey(PlayerActionsEnum.closing, ToolsSystem.PauseType.Inventory), KeyCode.Escape);
 
     }
 
@@ -183,14 +182,28 @@ public static class ToolsGame
         {
         }
         ));
+        actions.Add(PlayerActionsEnum.abilityE, (() =>
+        {
+            GCon.game.Player.UseEBonus();
+        }, () =>
+        {
+        }
+        )); actions.Add(PlayerActionsEnum.abilityQ, (() =>
+        {
+            GCon.game.Player.UseQBonus();
+        }, () =>
+        {
+        }
+        ));
     }
 
     public static void SetupGameAfterLoad()
     {
 
-        GCon.gameActionHandler = new ActionHandler(true);
         DebugSetup();
         ToolsUI.SetupUI();
+        GCon.AddPausedType(ToolsSystem.PauseType.InGame);
+        GCon.game.gameActionHandler = new ActionHandler(true, ToolsSystem.PauseType.Inventory, ToolsSystem.PauseType.Animation, ToolsSystem.PauseType.InGame);
     }
 
     public static void SetupGame()
@@ -206,7 +219,7 @@ public static class ToolsGame
         string[] txt = File.ReadAllLines(PATH);
         for (int i = 0; i < txt.Length; i++)
         {
-            pseudoRand.Enqueue(System.Convert.ToDouble(txt[i]));
+            pseudoRand.Enqueue((float)System.Convert.ToDouble(txt[i]));
         }
 #else
         File.WriteAllText(PATH, "");
@@ -253,7 +266,7 @@ public static class ToolsGame
         }
         else
         {
-            double num = rnd.NextDouble();
+            float num = (float)rnd.NextDouble();
             string destination = PATH;
             File.AppendAllText(destination, num.ToString() + "\n");
             return num;

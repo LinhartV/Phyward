@@ -48,6 +48,9 @@ public class ItemAction
     private double repeat;
     public ExecutionType executionType;
     public OnLeaveType onLeaveType;
+    public List<ToolsSystem.PauseType> pauseTypes;
+    [JsonIgnore]
+    public LambdaActions.LambdaAction lambdaAction = null;
     public long NowDifference { get; set; } = 0;
     /// <summary>
     /// Creates ItemAction - any possible action can be assigned to an item
@@ -55,10 +58,37 @@ public class ItemAction
     /// <param name="actionName">Name of an action from LambdaActions</param>
     /// <param name="repeat">How many frames to wait between executions (0 = only first Time, 1 = each frame)</param>
     /// <param name="clientAction">Whether this action should be executed on client side</param>
+    /// <param name="pauseTypes">"When to stop the action"</param>
     /// <param name="executionType"></param>
-    public ItemAction(string actionName, double repeat, ExecutionType executionType = ExecutionType.EveryTime, OnLeaveType onLeaveType = OnLeaveType.Freeze, params object[] parameters)
+    public ItemAction(string actionName, double repeat, ExecutionType executionType = ExecutionType.EveryTime, OnLeaveType onLeaveType = OnLeaveType.Freeze, List<ToolsSystem.PauseType> pauseTypes = null, params object[] parameters)
     {
+        if (pauseTypes != null)
+            this.pauseTypes = pauseTypes;
+        else
+            this.pauseTypes = new List<ToolsSystem.PauseType>();
+
         ActionName = actionName;
+        Repeat = repeat;
+        this.executionType = executionType;
+        this.Parameters = parameters;
+        this.onLeaveType = onLeaveType;
+    }
+    /// <summary>
+    /// Creates ItemAction - use this constructor for UI only as this action won't be saved to disk after closing
+    /// </summary>
+    /// <param name="lambdaAction">Direct lambda action (ActionHandler item, params object[] parameters)</param>
+    /// <param name="repeat">How many frames to wait between executions (0 = only first Time, 1 = each frame)</param>
+    /// <param name="clientAction">Whether this action should be executed on client side</param>
+    /// <param name="pauseTypes">"When to stop the action"</param>
+    /// <param name="executionType"></param>
+    public ItemAction(LambdaActions.LambdaAction lambdaAction, double repeat, ExecutionType executionType = ExecutionType.EveryTime, OnLeaveType onLeaveType = OnLeaveType.Freeze, List<ToolsSystem.PauseType> pauseTypes = null, params object[] parameters)
+    {
+        if (pauseTypes != null)
+            this.pauseTypes = pauseTypes;
+        else
+            this.pauseTypes = new List<ToolsSystem.PauseType>();
+        this.lambdaAction = lambdaAction;
+        ActionName = "";
         Repeat = repeat;
         this.executionType = executionType;
         this.Parameters = parameters;

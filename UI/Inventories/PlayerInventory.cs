@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using static ToolsUI;
 
-public class PlayerInventory :Inventory
+public class PlayerInventory : Inventory
 {
     private SlotTemplate armorSlot;
     /// <summary>
@@ -49,7 +49,7 @@ public class PlayerInventory :Inventory
                     doubleBreak = true;
                     break;
                 }
-                var slotUI = new SlotTemplate(slotWidth, true, true, false, slotsInventory.Go, new Vector3(offset + j * (slotWidth + offset) + slotWidth / 2, -offset - i * (slotWidth + offset) - slotWidth / 2));
+                var slotUI = new SlotTemplate(slotWidth, true, true, false, slotsInventory.Go, new Vector3(offset + j * (slotWidth + offset) + slotWidth / 2, -offset - i * (slotWidth + offset) - slotWidth / 2), null, null, null, true);
                 slots.Add(slotUI);
             }
             if (doubleBreak)
@@ -58,7 +58,7 @@ public class PlayerInventory :Inventory
             }
         }
     }
-    
+
     public override bool OpenInventory()
     {
         if (base.OpenInventory())
@@ -108,15 +108,15 @@ public class PlayerInventory :Inventory
         {
             if (ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot))
             {
-                GCon.game.Player.PlayerControl.RemoveFromBase(slot.SlotableRef);
+                GCon.game.Player.PlayerControl.RemoveFromBase(DraggedSlot.SlotableRef);
             }
             if (ToolsUI.playerInventory.slots.Contains(ToolsUI.draggedSlot) || ToolsUI.baseInventory.backpackSlots.Contains(ToolsUI.draggedSlot))
             {
-                GCon.game.Player.PlayerControl.RemoveFromBackpack(slot.SlotableRef);
+                GCon.game.Player.PlayerControl.RemoveFromBackpack(DraggedSlot.SlotableRef);
             }
             //slot.RemoveSlotable();
             ActiveInventory.UpdateInventory();
-        });
+        }, null, true);
     }
 
 

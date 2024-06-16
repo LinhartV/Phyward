@@ -38,7 +38,10 @@ public abstract class Inventory
                 panel.Go.transform.localPosition = new Vector3(0, 0);
                 ToolsUI.wrapPanel.StartTransition("reveal");
             }
-            GCon.Paused = true;
+            if (GCon.GetPausedType() != ToolsSystem.PauseType.Inventory)
+            {
+                GCon.AddPausedType(ToolsSystem.PauseType.Inventory);
+            }
             ToolsUI.SetCursor(ToolsUI.normalCursor);
             UpdateInventory();
             return true;
@@ -50,6 +53,7 @@ public abstract class Inventory
         if (ToolsUI.openInventories.Count > 1)
         {
             ToolsUI.openInventories.ElementAt(1).panel.Go.SetActive(true);
+            ToolsUI.openInventories.ElementAt(1).UpdateInventory();
             panel.ReturnTransition("reveal");
         }
         else

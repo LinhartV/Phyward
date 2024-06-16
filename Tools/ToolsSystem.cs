@@ -17,7 +17,21 @@ using Newtonsoft.Json.Linq;
 public static class ToolsSystem
 {
 
-    
+
+    /// <summary>
+    /// When the key is active
+    /// </summary>
+    /// 
+    public enum PauseType {
+        ///<summary>This keyaction can be triggered when inventory is open</summary>
+        Inventory,
+        ///<summary>This keyaction can be triggered during gameplay</summary>
+        InGame,
+        ///<summary>This keyaction can be triggered while animation is being played</summary>
+        Animation,
+        ///<summary>This keyaction can be triggered in main menu</summary>
+        Menu
+    };
 
     public static JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings()
     {
@@ -60,6 +74,8 @@ public static class ToolsSystem
         {
             GCon.games.Add(playerName, new GameControl(playerName));
             GCon.game = GCon.games[playerName];
+            //TODO mazat při nahrání jiné hry
+            GCon.game.ActivateThisGame();
             ToolsGame.CreateGame();
 
             //ToolsSystem.SaveGame(games[playerName]);
@@ -73,7 +89,7 @@ public static class ToolsSystem
     {
         foreach (var key in KeyController.registeredKeys.Values)
         {
-            if (key.Peek().Pressed && key.Peek().PauseTypeKey == RegisteredKey.PauseType.onResume)
+            if (key.Peek().Pressed && key.Peek().pauseTypeKeys.Contains(ToolsSystem.PauseType.InGame))
             {
                 key.Peek().KeyUp();
             }
@@ -152,25 +168,26 @@ public static class ToolsSystem
 #endif
     }
 
-    public static bool ScrambledEquals<T>(IEnumerable<T> list1, IEnumerable<T> list2)
+    public static bool ScrambledEquals(List<PreUnit> list1, List<PreUnit> list2)
     {
-        var cnt = new Dictionary<T, int>();
-        foreach (T s in list1)
+        
+        var cnt = new Dictionary<string, int>();
+        foreach (PreUnit s in list1)
         {
-            if (cnt.ContainsKey(s))
+            if (cnt.Keys.Any(x => x == s.Name))
             {
-                cnt[s]++;
+                cnt[s.Name]++;
             }
             else
             {
-                cnt.Add(s, 1);
+                cnt.Add(s.Name, 1);
             }
         }
-        foreach (T s in list2)
+        foreach (PreUnit s in list2)
         {
-            if (cnt.ContainsKey(s))
+            if (cnt.Keys.Any(x => x == s.Name))
             {
-                cnt[s]--;
+                cnt[s.Name]--;
             }
             else
             {

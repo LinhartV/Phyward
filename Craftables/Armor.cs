@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 public class Armor : Upgradable
 {
-
+    public override ICollectableRef DeepClone()
+    {
+        return new Armor();
+    }
 }
 

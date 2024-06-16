@@ -51,7 +51,7 @@ public class RealAcceleratedMovement : IMovement
         if (this.MovementSpeed > Constants.MIN_VALUE)
         {
             MovementSpeed = (float)Math.Sqrt(xMovement * xMovement + yMovement * yMovement);
-            MovementSpeed -= friction * frictionCoef * GCon.percentageOfFrame;
+            MovementSpeed -= friction * frictionCoef * GCon.frameTime;
             (xMovement, yMovement) = ToolsMath.PolarToCartesian(Angle, MovementSpeed);
 
             if (MovementSpeed < 0)
@@ -68,7 +68,7 @@ public class RealAcceleratedMovement : IMovement
         float deltax, prex;
         float deltay, prey;
         (prex, prey) = ToolsMath.PolarToCartesian(Angle, MovementSpeed);
-        (deltax, deltay) = ToolsMath.PolarToCartesian(preangle, Acceleration * GCon.percentageOfFrame);
+        (deltax, deltay) = ToolsMath.PolarToCartesian(preangle, Acceleration * GCon.frameTime);
         prex += deltax;
         prey += deltay;
         Angle = ToolsMath.CartesianToPolar(prex, prey).Item1;*/
@@ -92,7 +92,7 @@ public class RealAcceleratedMovement : IMovement
             float deltax, deltay;
             isUpdated = true;
             (xMovement, yMovement) = ToolsMath.PolarToCartesian(Angle, MovementSpeed);
-            (deltax, deltay) = ToolsMath.PolarToCartesian(wantedAngle, Acceleration * GCon.percentageOfFrame);
+            (deltax, deltay) = ToolsMath.PolarToCartesian(wantedAngle, Acceleration * GCon.frameTime);
             xMovement += deltax;
             yMovement += deltay;
             MovementSpeed = (float)Math.Sqrt(xMovement * xMovement + yMovement * yMovement);

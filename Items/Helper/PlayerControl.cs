@@ -23,6 +23,10 @@ public class PlayerControl
     }
     [JsonProperty]
     public CraftedWeapon WeaponSlotRef;
+    [JsonProperty]
+    public Edible QBonusRef;
+    [JsonProperty]
+    public Edible EBonusRef;
     /// <summary>
     /// Whether to pickup everything automatically or player has to press F
     /// </summary>
@@ -51,14 +55,19 @@ public class PlayerControl
 
     public void DiscoverNewUnit(PreUnit unit)
     {
+        if (discoveredUnits.Any(x => x.Name == unit.Name))
+        {
+            return;
+        }
         discoveredUnits.Add(unit);
+        discoveredUnits.Sort();
         craftables.Clear();
         foreach (var craftable in AllCrafts.craftables)
         {
             bool dontAdd = false;
             foreach (var material in craftable.NeededMaterials)
             {
-                if (material.Item1 is PreUnit pu && !discoveredUnits.Contains(pu))
+                if (material.Item1 is PreUnit pu && !discoveredUnits.Any(x => x.Name == pu.Name))
                 {
                     dontAdd = true;
                     break;
@@ -80,7 +89,7 @@ public class PlayerControl
     public void AddSlotableToBase(Slotable material)
     {
         bool breaking = false;
-        if (material.Stackable)
+        if (material.Stackable && !material.Exchangable)
         {
             for (int i = 0; i < inBase.Count; i++)
             {
@@ -99,13 +108,16 @@ public class PlayerControl
         }
         if (!breaking || !(material.Stackable))
         {
-            inBase.Add(material);
+            inBase.Add(material.DeepClone() as Slotable);
             if (material is PreUnit)
             {
                 unitCount[material.Name] += material.Count;
             }
         }
-
+        if (material is PreUnit pu && !GCon.game.Player.PlayerControl.discoveredUnits.Any(x => x.Name == pu.Name))
+        {
+            DiscoverNewUnit(pu);
+        }
     }
 
     public bool Craft(Craftable craftable)
@@ -178,15 +190,37 @@ public class PlayerControl
         {
             ToolsUI.wrapPanel.weaponSlot.RemoveSlotable();
         }
+        if (ToolsUI.wrapPanel.qBonusSlot.SlotableRef == slotable)
+        {
+            ToolsUI.wrapPanel.qBonusSlot.RemoveSlotable();
+        }
+        if (ToolsUI.wrapPanel.eBonusSlot.SlotableRef == slotable)
+        {
+            ToolsUI.wrapPanel.eBonusSlot.RemoveSlotable();
+        }
         backpack.Remove(slotable);
     }
     public void PickupCollectable(Collectable col)
     {
-        if (backpack.Count < SlotSpace)
+        if (col.SlotableRef is IUnslotable u)
+        {
+            ToolsUI.AnimateSettingSlotable(1f, new Vector2(0, 0), col.Prefab, () =>
+            {
+                u.ActionWhenCollected();
+
+            }, false);
+            col.Dispose();
+            GCon.game.gameActionHandler.AddAction(new ItemAction((ActionHandler item, object[] parameters) =>
+            {
+                GCon.AddPausedType(ToolsSystem.PauseType.Animation);
+            }, 4, ItemAction.ExecutionType.OnlyFirstTime,ItemAction.OnLeaveType.KeepRunning));
+
+        }
+        else if (backpack.Count < SlotSpace)
         {
             ToolsUI.AnimateSettingSlotable(1f, new Vector2(0, -250), col.Prefab, () =>
             {
-                backpack.Add(col.SlotableRef);
+                backpack.Add(col.SlotableRef as Slotable);
                 ToolsUI.ActiveInventory.UpdateInventory();
             }, false);
             col.Dispose();

@@ -14,7 +14,7 @@ public abstract class Craftable : Slotable
     /// <param name="neededMaterials">What and how many</param>
     /// <param name="tier">Rarity of this item</param>
     /// <param name="filter">Kind of this item</param>
-    protected Craftable(string name, string subheading, string description, int tier, ToolsUI.FilterType filter, GameObject prefab, params (Slotable, int)[] neededMaterials) : base(name, subheading, description, filter, prefab)
+    protected Craftable(string name, string subheading, string description, int tier, ToolsUI.FilterType filter, GameObject prefab, bool exchangable, params (Slotable, int)[] neededMaterials) : base(name, subheading, description, filter, prefab,false, exchangable)
     {
         NeededMaterials = neededMaterials;
         Tier = tier;

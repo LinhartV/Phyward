@@ -101,9 +101,22 @@ public static class LambdaActions
         {
             GCon.freezeCamera = false;
         });
+        lambdaActions.Add("heal", (item, parameter) =>
+        {
+            GCon.game.Player.ChangeLives((float)parameter[0]);
+        });
+        lambdaActions.Add("stopBonus", (item, parameter) =>
+        {
+            GCon.game.Player.DeleteAction((string)parameter[0]);
+        });
+        lambdaActions.Add("slotCountdown", (item, parameter) =>
+        {
+            LoadingSlotTemplate lst = parameter[0] as LoadingSlotTemplate;
+            lst.SetLoadingValue(GCon.frameTime);
+        });
         lambdaActions.Add("ShowDescription", (item, parameter) =>
         {
-            if (item==null || (item as SlotTemplate).Go == null || !(item as SlotTemplate).Go.activeInHierarchy)
+            if (item == null || (item as SlotTemplate).Go == null || (item as SlotTemplate).SlotableRef.Prefab == null || !(item as SlotTemplate).Go.activeInHierarchy)
             {
                 item.DeleteAction("ShowDescription");
                 return;
@@ -135,7 +148,7 @@ public static class LambdaActions
             ToolsUI.descriptionPanel.Go.transform.GetChild(0).gameObject.GetComponent<TMPro.TextMeshProUGUI>().text = ui.Name;
             ToolsUI.descriptionPanel.Go.transform.GetChild(1).gameObject.GetComponent<TMPro.TextMeshProUGUI>().text = ui.Subheading;
             ToolsUI.descriptionPanel.Go.transform.GetChild(2).gameObject.GetComponent<TMPro.TextMeshProUGUI>().text = ui.Description;
-            ToolsUI.descriptionPanel.Go.transform.GetChild(3).gameObject.GetComponent<Image>().sprite = ui.Prefab.transform.GetChild(0).gameObject.GetComponent<SpriteRenderer>().sprite;
+            ToolsUI.descriptionPanel.Go.transform.GetChild(3).gameObject.GetComponent<Image>().sprite = ui.Prefab.transform.GetChild(0).gameObject.GetComponent<Image>().sprite;
         });
     }
     public static void ExecuteAction(string actionName, ActionHandler item, params object[] parameters)

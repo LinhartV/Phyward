@@ -20,7 +20,7 @@ public static class KeyController
         {
             foreach (var key in registeredKeys[keyName])
             {
-                if ((GCon.Paused && key.PauseTypeKey != PauseType.onResume) || (!GCon.Paused && key.PauseTypeKey != PauseType.onPause))
+                if (key.pauseTypeKeys.Contains(GCon.GetPausedType()))
                 {
                     return key;
                 }

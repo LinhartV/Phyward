@@ -18,8 +18,11 @@ public static class GCon
     public static GameControl game;
     public static bool freezeCamera = false;
     private static bool gameStarted = false;
-    public static ActionHandler gameActionHandler;
     public static IInteractable lastInteractable;
+    public static ActionHandler menuActionHandler = new ActionHandler(true, ToolsSystem.PauseType.Menu);
+
+    public static Dictionary<ToolsSystem.PauseType, GameSystem> gameSystems = new() { { ToolsSystem.PauseType.Menu, new GameSystem(() => {}) } };
+
     public static bool GameStarted
     {
         get
@@ -35,35 +38,32 @@ public static class GCon
             gameStarted = value;
         }
     }
-    private static bool paused = false;
-    public static bool Paused
+    private static Stack<ToolsSystem.PauseType> paused = new Stack<ToolsSystem.PauseType>();
+
+    public static void AddPausedType(ToolsSystem.PauseType type)
     {
-        get
+        if (paused.Count != 0)
         {
-            return paused;
+            gameSystems[paused.Peek()]?.OnDeactivation();
         }
-        set
-        {
-            if (value == true)
-            {
-                ToolsGame.PausePausables(true);
-                ToolsSystem.ReleaseAllKeys();
-                foreach (var item in ToolsUI.UIItems)
-                {
-                    item.OnLevelEnter();
-                }
-            }
-            else
-            {
-                ToolsGame.PausePausables(false);
-                foreach (var item in ToolsUI.UIItems)
-                {
-                    item.OnLevelLeave();
-                }
-            }
-            paused = value;
-        }
+        paused.Push(type);
+        gameSystems[paused.Peek()].OnActivation();
+        ToolsGame.PausePausables(paused.Peek());
+        ToolsSystem.ReleaseAllKeys();
     }
-    public static float percentageOfFrame = Time.fixedDeltaTime;
+    public static ToolsSystem.PauseType GetPausedType()
+    {
+        return paused.Count == 0 ? ToolsSystem.PauseType.Menu : paused.Peek();
+    }
+    public static void PopPausedType()
+    {
+        gameSystems[paused.Peek()]?.OnDeactivation();
+        paused.Pop();
+        gameSystems[paused.Peek()]?.OnActivation();
+        ToolsGame.PausePausables(paused.Peek());
+        ToolsSystem.ReleaseAllKeys();
+    }
+
+    public static float frameTime = Time.fixedDeltaTime;
 
 }

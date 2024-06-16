@@ -93,15 +93,15 @@ public abstract class Movable : Item, IPausable
         this.AddAction(new ItemAction("faceInDirection", 1, ItemAction.ExecutionType.EveryTime));
     }
 
-    public void TriggerPause(bool pauseOn)
+    public void TriggerPause(ToolsSystem.PauseType type)
     {
-        if (pauseOn)
+        if (pauseTypes.Contains(type))
         {
-            rb.velocity = Vector2.zero;
+            rb.velocity = prevVelocity;
         }
         else
         {
-            rb.velocity = prevVelocity;
+            rb.velocity = Vector2.zero;
         }
     }
 

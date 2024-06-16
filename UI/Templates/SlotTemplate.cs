@@ -32,12 +32,14 @@ public class SlotTemplate : UIItem
     protected Action<SlotTemplate> onDrop;
     protected Action<SlotTemplate> onRemovedSlotable;
     private bool hasTextAttached = false;
+    private bool addByReference;
     /// <summary>
     /// text for count
     /// </summary>
     private GameObject text;
+    private GameObject placeHolder;
 
-    public int Count { get; private set; }
+    //public int Count { get; private set; }
     /// <summary>
     /// When dragging, whether to drag all or just one from stack
     /// </summary>
@@ -47,11 +49,12 @@ public class SlotTemplate : UIItem
     /// Whether this slot is stackable
     /// </summary>
     public bool Stackable { get; set; } = true;
-    
+    /// <summary>
+    /// Whether to exchange dropped slot
+    /// </summary>
+    private bool exchangable;
 
-    public SlotTemplate()
-    {
-    }
+
 
     /// <param name="hoverable">Whether to start onHover animation</param>
     /// <param name="slotWidth"></param>
@@ -62,7 +65,7 @@ public class SlotTemplate : UIItem
     /// <param name="dropableCondition">Under which condition this slot can be considered dropable. Reference is set to this slot. Refer ToolsUI.draggedSlot for dragged slot. Leave blank for always false</param>
     /// <param name="onRemovedSlotable">What should happen when slotable is removed from this slot. Reference to this slot.</param>
     /// <param name="onDrop">What should happen when something is dropped here - reference is set to slot where it's being dropped</param>
-    public SlotTemplate(float slotWidth, bool hoverable, bool dragable, bool deleteSlotableInDraggedSlotWhenDropped, GameObject parent, Vector3 pos, Func<SlotTemplate, bool> dropableCondition = null, Action<SlotTemplate> onDrop = null, Action<SlotTemplate> onRemovedSlotable = null) : base()
+    public SlotTemplate(float slotWidth, bool hoverable, bool dragable, bool deleteSlotableInDraggedSlotWhenDropped, GameObject parent, Vector3 pos, Func<SlotTemplate, bool> dropableCondition = null, Action<SlotTemplate> onDrop = null, Action<SlotTemplate> onRemovedSlotable = null, bool addByReference = false, bool exchangable = false, ToolsSystem.PauseType pauseType = ToolsSystem.PauseType.Inventory, params ToolsSystem.PauseType[] pauseTypes) : base(null, pauseType, pauseTypes)
     {
         var slot = UnityEngine.Object.Instantiate(GameObjects.slot);
         slot.transform.SetParent(parent.transform, false);
@@ -75,7 +78,7 @@ public class SlotTemplate : UIItem
         var box = slot.GetComponent<BoxCollider2D>();
         box.size = new Vector2(slotWidth, slotWidth);
         slot.transform.SetAsFirstSibling();
-        Constructor(slot, hoverable, dropableCondition, dragable, onDrop, deleteSlotableInDraggedSlotWhenDropped, onRemovedSlotable);
+        Constructor(slot, hoverable, dropableCondition, dragable, onDrop, deleteSlotableInDraggedSlotWhenDropped, onRemovedSlotable, addByReference, exchangable);
     }
 
     /// <param name="slot">Reference to a slot placed in the screen</param>
@@ -84,12 +87,14 @@ public class SlotTemplate : UIItem
     /// <param name="dropableCondition">Under which condition this slot can be considered dropable. Reference is set to this slot. Refer ToolsUI.draggedSlot for dragged slot. Leave blank for always false</param>
     /// <param name="onRemovedSlotable">What should happen when slotable is removed from this slot. Reference to this slot.</param>
     /// <param name="onDrop">What should happen when something is dropped here - reference is set to slot where it's being dropped. Reference to this slot.</param>
-    public SlotTemplate(GameObject slot, bool hoverable, bool dragable, bool deleteSlotableInDraggedSlotWhenDropped, Func<SlotTemplate, bool> dropableCondition = null, Action<SlotTemplate> onDrop = null, Action<SlotTemplate> onRemovedSlotable = null)
+    public SlotTemplate(GameObject slot, bool hoverable, bool dragable, bool deleteSlotableInDraggedSlotWhenDropped, Func<SlotTemplate, bool> dropableCondition = null, Action<SlotTemplate> onDrop = null, Action<SlotTemplate> onRemovedSlotable = null, bool addByReference = false, bool exchangable = false, ToolsSystem.PauseType pauseType = ToolsSystem.PauseType.Inventory, params ToolsSystem.PauseType[] pauseTypes) : base(null, pauseType, pauseTypes)
     {
-        Constructor(slot, hoverable, dropableCondition, dragable, onDrop, deleteSlotableInDraggedSlotWhenDropped, onRemovedSlotable);
+        Constructor(slot, hoverable, dropableCondition, dragable, onDrop, deleteSlotableInDraggedSlotWhenDropped, onRemovedSlotable, addByReference, exchangable);
     }
-    protected virtual void Constructor(GameObject slot, bool hoverable, Func<SlotTemplate, bool> dropableCondition, bool dragable, Action<SlotTemplate> onDrop, bool deleteSlotableInDraggedSlotWhenDropped, Action<SlotTemplate> onRemovedSlotable)
+    protected virtual void Constructor(GameObject slot, bool hoverable, Func<SlotTemplate, bool> dropableCondition, bool dragable, Action<SlotTemplate> onDrop, bool deleteSlotableInDraggedSlotWhenDropped, Action<SlotTemplate> onRemovedSlotable, bool addByReference, bool exchangable)
     {
+        this.exchangable = exchangable;
+        this.addByReference = addByReference;
         this.onRemovedSlotable = onRemovedSlotable;
         this.deleteSlotableInDraggedSlotWhenDropped = deleteSlotableInDraggedSlotWhenDropped;
         var rect = slot.GetComponent<RectTransform>();
@@ -131,52 +136,64 @@ public class SlotTemplate : UIItem
     }
     public override void OnMouseEnterDefault()
     {
-        base.OnMouseEnterDefault();
-        if (ToolsUI.DraggedSlot == null)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            StartTransition("hover");
-        }
-        if (ToolsUI.DraggedSlot != null && this.Dropable == true)
-        {
-            StartTransition("hover");
-            ToolsUI.hoveredWhileDragging = this;
-        }
-        if (SlotableRef != null && ToolsUI.DraggedSlot == null && GCon.Paused == true)
-        {
-            this.AddAction(new ItemAction("ShowDescription", 60, ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
+            base.OnMouseEnterDefault();
+            if (ToolsUI.DraggedSlot == null)
+            {
+                StartTransition("hover", true);
+            }
+            if (ToolsUI.DraggedSlot != null && this.Dropable == true)
+            {
+                StartTransition("hover", true);
+                ToolsUI.hoveredWhileDragging = this;
+            }
+            if (SlotableRef != null && ToolsUI.DraggedSlot == null && GCon.GetPausedType() == ToolsSystem.PauseType.Inventory)
+            {
+                this.AddAction(new ItemAction("ShowDescription", 60, ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
+            }
         }
         //ToolsUI.SetCursor(ToolsUI.selectCursor);
     }
     public override void OnMouseExitDefault()
     {
-        this.DeleteAction("ShowDescription");
-        if (SlotableRef != null)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            ToolsUI.descriptionPanel.Go.SetActive(false);
-        }
-        base.OnMouseExitDefault();
-        ReturnTransition("hover");
-
-        if (ToolsUI.DraggedSlot != null)
-        {
-            if (ToolsUI.hoveredWhileDragging == this)
+            this.DeleteAction("ShowDescription");
+            if (SlotableRef != null)
             {
-                ToolsUI.hoveredWhileDragging = null;
+                ToolsUI.descriptionPanel.Go.SetActive(false);
+            }
+            base.OnMouseExitDefault();
+            ReturnTransition("hover");
+
+            if (ToolsUI.DraggedSlot != null)
+            {
+                if (ToolsUI.hoveredWhileDragging == this)
+                {
+                    ToolsUI.hoveredWhileDragging = null;
+                }
             }
         }
         //ToolsUI.SetCursor(ToolsUI.normalCursor);
     }
     public override void OnMouseDownDefault()
     {
-        if (Dragable && ToolsUI.DraggedSlot == null && Count > 0)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            StartDragging();
+            if (Dragable && ToolsUI.DraggedSlot == null && SlotableRef.Count > 0)
+            {
+                StartDragging();
+            }
+            base.OnMouseDownDefault();
         }
-        base.OnMouseDownDefault();
     }
     public override void OnMouseUpDefault()
     {
-        base.OnMouseDownDefault();
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
+        {
+            base.OnMouseDownDefault();
+        }
     }
     public override void OnLevelLeave()
     {
@@ -206,8 +223,8 @@ public class SlotTemplate : UIItem
         }
         else
         {
-            this.Count--;
-            if (Count == 0)
+            this.SlotableRef.Count--;
+            if (SlotableRef.Count == 0)
             {
                 if (!ShowStackTextForCountLessThenTwo)
                 {
@@ -245,7 +262,7 @@ public class SlotTemplate : UIItem
                 this.Dragable = true;
                 if (!DragAll)
                 {
-                    Count++;
+                    SlotableRef.Count++;
                 }
                 if (!hasSlotableDisplayed)
                 {
@@ -269,13 +286,13 @@ public class SlotTemplate : UIItem
         {
             if (!DragAll)
             {
-                Count++;
+                SlotableRef.Count++;
             }
             RemoveSlotable(DragAll);
         }
         else
         {
-            AddSlotable(this.SlotableRef);
+            AddSlotable(this.SlotableRef, true, -1, false);
         }
     }
 
@@ -296,8 +313,8 @@ public class SlotTemplate : UIItem
         }
         else
         {
-            this.Count--;
-            if (Count == 0)
+            this.SlotableRef.Count--;
+            if (SlotableRef.Count == 0)
             {
                 if (!ShowStackTextForCountLessThenTwo)
                 {
@@ -318,7 +335,7 @@ public class SlotTemplate : UIItem
     public void AddSlotable(Slotable slotable, bool stack = false, int count = -1, bool setCountRelatively = true)
     {
         Dragable = generallyDraggable;
-        int slotableCount = 0;
+        int slotableCount;
         if (ToolsUI.draggedSlot == null || ToolsUI.draggedSlot.DragAll)
         {
             slotableCount = slotable.Count;
@@ -327,25 +344,25 @@ public class SlotTemplate : UIItem
         {
             slotableCount = 1;
         }
-        if (SlotableRef == null)
+        if (!hasSlotableDisplayed)
         {
             InstantiateSlotable(slotable, count == -1 ? slotableCount : count);
         }
-        else if (stack && SlotableRef.Name == slotable.Name && SlotableRef.Stackable && Stackable)
+        else if (stack && SlotableRef.Name == slotable.Name && SlotableRef.Stackable && Stackable && !exchangable && !SlotableRef.Exchangable)
         {
             if (count == -1)
             {
                 if (setCountRelatively)
-                    Count += slotableCount;
+                    SlotableRef.Count += slotableCount;
                 else
-                    Count = slotableCount;
+                    SlotableRef.Count = slotableCount;
             }
             else
             {
                 if (setCountRelatively)
-                    Count += count;
+                    SlotableRef.Count += count;
                 else
-                    Count = count;
+                    SlotableRef.Count = count;
             }
         }
         else //if (slotable != this.SlotableRef) dunno why I wrote this here
@@ -357,18 +374,18 @@ public class SlotTemplate : UIItem
     }
     private void UpdateCount()
     {
-        if (Count > 1 || ShowStackTextForCountLessThenTwo)
+        if (SlotableRef != null && (SlotableRef.Count > 1 || ShowStackTextForCountLessThenTwo))
         {
             if (!hasTextAttached)
             {
-                text = UnityEngine.Object.Instantiate(GameObjects.counter);
+                text = UnityEngine.Object.Instantiate(GameObjects.text);
                 text.transform.SetParent(this.Go.transform.GetChild(1).transform, false);
                 text.GetComponent<RectTransform>().pivot = new Vector2(0f, 1);
                 text.transform.localScale = new Vector3(1 / this.Go.transform.GetChild(1).localScale.x, 1 / this.Go.transform.GetChild(1).localScale.y);
                 text.transform.localPosition = new Vector3(-0.38f, 0);
                 hasTextAttached = true;
             }
-            text.GetComponent<TMPro.TextMeshProUGUI>().text = Count.ToString();
+            text.GetComponent<TMPro.TextMeshProUGUI>().text = SlotableRef.Count.ToString();
         }
         else
         {
@@ -382,41 +399,52 @@ public class SlotTemplate : UIItem
     protected void InstantiateSlotable(Slotable slotable, int count = -1)
     {
         hasSlotableDisplayed = true;
-        var prefab = UnityEngine.Object.Instantiate(slotable.Prefab);
+        var prefab = UnityEngine.Object.Instantiate(GameObjects.GetPrefabByName(slotable.PrefabName));
+        prefab.transform.SetParent(this.Go.transform, false);
         prefab.layer = LayerMask.NameToLayer("UI");
         var image = prefab.transform.GetChild(0).AddComponent<Image>();
+        image.preserveAspect = true;
         image.raycastTarget = false;
         image.sprite = prefab.GetComponentInChildren<SpriteRenderer>().sprite;
         Component.Destroy(prefab.GetComponentInChildren<SpriteRenderer>());
 
-        //prefab.transform.localScale = Vector3.one;
-        SlotableRef = slotable;
-        if (count == -1)
+
+
+
+
+        if (addByReference)
         {
-            Count = slotable.Count;
+            SlotableRef = slotable;
         }
         else
         {
-            Count = count;
-            SlotableRef.Count = Count;
+            SlotableRef = slotable.DeepClone() as Slotable;
+        }
+        SlotableRef.Prefab = prefab;
+        //prefab.transform.localScale = Vector3.one;
+        if (count == -1)
+        {
+            SlotableRef.Count = slotable.Count;
+        }
+        else
+        {
+            SlotableRef.Count = count;
         }
         if (Stackable == false)
         {
-            Count = 1;
             SlotableRef.Count = 1;
         }
-        prefab.transform.SetParent(this.Go.transform, false);
-
         var rect = prefab.AddComponent<RectTransform>();
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
+        Component.Destroy(prefab.GetComponent<BoxCollider2D>());
         prefab.transform.localPosition = new Vector3(0, 0);
         var width = (Constants.SLOT_WIDTH - Constants.SLOT_OFFSET) * this.Go.transform.GetChild(0).localScale.x / Constants.SLOT_WIDTH;
         prefab.transform.localScale = new Vector3(width, width, 1);
-        Component.Destroy(prefab.GetComponent<BoxCollider2D>());
         prefab.transform.GetChild(0).transform.localScale = new Vector3(1, 1, 1);
         prefab.transform.GetChild(0).GetComponent<RectTransform>().sizeDelta = new Vector2(1, 1);
+        prefab.transform.SetSiblingIndex(1);
         hasTextAttached = false;
         UpdateCount();
     }
@@ -424,9 +452,38 @@ public class SlotTemplate : UIItem
     {
         if (this.Go.transform.GetChild(1).gameObject.activeInHierarchy)
         {
-            GameObject.Destroy(this.Go.transform.GetChild(1).gameObject);
+            GameObject.DestroyImmediate(this.Go.transform.GetChild(1).gameObject);
         }
+        hasTextAttached = false;
         hasSlotableDisplayed = false;
         Dragable = false;
     }
+    /// <summary>
+    /// Change placeholder text
+    /// </summary>
+    /// <param name="text">Write "" to delete placeholder</param>
+    public void ChangePlaceHolder(string text)
+    {
+        if (placeHolder == null && text != "")
+        {
+            placeHolder = UnityEngine.Object.Instantiate(GameObjects.text);
+            placeHolder.transform.SetParent(Go.transform.GetChild(0));
+            placeHolder.transform.SetAsFirstSibling();
+            var textUI = placeHolder.GetComponent<TMPro.TextMeshProUGUI>();
+            textUI.text = text;
+            textUI.color = new Color(1, 1, 1, 0.5f);
+            placeHolder.transform.localScale = new Vector3(1 / placeHolder.transform.parent.localScale.x, 1 / placeHolder.transform.parent.localScale.y);
+            placeHolder.transform.localPosition = Vector3.zero;
+            textUI.fontSize *= this.Go.GetComponent<RectTransform>().rect.width / 100;
+        }
+        else if (text != "")
+        {
+            placeHolder.GetComponent<TMPro.TextMeshProUGUI>().text = text;
+        }
+        else if (placeHolder != null)
+        {
+            Component.Destroy(placeHolder);
+        }
+    }
+
 }

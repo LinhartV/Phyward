@@ -73,7 +73,7 @@ public static class ToolsMath
     /// </summary>
     public static float SecondsToFrames(float seconds)
     {
-        return seconds / GCon.percentageOfFrame;
+        return seconds / GCon.frameTime;
     }
     public static Vector4 ColorToVector(Color color)
     {

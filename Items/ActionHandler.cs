@@ -3,11 +3,12 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 /// <summary>
 /// Object that actions can be assigned to
 /// </summary>
-public class ActionHandler
+public class ActionHandler : IEqualityComparer<ActionHandler>
 {
     /// <summary>
     /// Enum for determining what to do with action with the same name
@@ -29,14 +30,21 @@ public class ActionHandler
     [JsonProperty]
     public int Id { get; set; }
     public bool IsInLevel { get; set; }
+    [JsonProperty]
+    protected List<ToolsSystem.PauseType> pauseTypes = new();
 
     public ActionHandler()
     {
     }
 
-    public ActionHandler(bool dontBeCalledByJson)
+    public ActionHandler(bool dontBeCalledByJson, ToolsSystem.PauseType pauseType, params ToolsSystem.PauseType[] pauseTypes)
     {
-        this.Id = GCon.game.IdItems++;
+        if (GCon.game == null)
+            this.Id = -1;
+        else
+            this.Id = GCon.game.IdItems++;
+        this.pauseTypes.AddRange(pauseTypes);
+        this.pauseTypes.Add(pauseType);
     }
 
 
@@ -60,7 +68,10 @@ public class ActionHandler
         Dictionary<string, ItemAction> tempActionsEveryFrame = new Dictionary<string, ItemAction>(actionsEveryFrame);
         foreach (var action in tempActionsEveryFrame.Values)
         {
-            LambdaActions.ExecuteAction(action.ActionName, this, action.Parameters);
+            if (!action.pauseTypes.Contains(GCon.GetPausedType()))
+            {
+                LambdaActions.ExecuteAction(action.ActionName, this, action.Parameters);
+            }
         }
         if (this is Movable mm && mm.IsInLevel)
         {
@@ -70,26 +81,36 @@ public class ActionHandler
         Dictionary<string, (long, ItemAction)> tempActions = new Dictionary<string, (long, ItemAction)>(actions);
         foreach (var actionName in tempActions.Keys)
         {
-            if (tempActions[actionName].Item1 + tempActions[actionName].Item2.NowDifference < now)
+            if (!tempActions[actionName].Item2.pauseTypes.Contains(GCon.GetPausedType()))
             {
-                if (actions[actionName].Item2.executionType == ItemAction.ExecutionType.EveryTime || (actions[actionName].Item2.Repeat == 0 && actions[actionName].Item2.executionType == ItemAction.ExecutionType.OnlyFirstTime))
+                if (tempActions[actionName].Item1 + tempActions[actionName].Item2.NowDifference < now)
                 {
-                    LambdaActions.ExecuteAction(actions[actionName].Item2.ActionName, this, actions[actionName].Item2.Parameters);
-                }
-                else if (actions[actionName].Item2.executionType == ItemAction.ExecutionType.NotFirstTime)
-                {
-                    actions[actionName].Item2.executionType = ItemAction.ExecutionType.EveryTime;
-                }
-                actions.Remove(actionName);
-                if (tempActions[actionName].Item2.Repeat > 0 && tempActions[actionName].Item2.executionType != ItemAction.ExecutionType.StopExecuting)
-                {
-                    actions.Add(actionName, (now + (long)(tempActions[actionName].Item2.Repeat), tempActions[actionName].Item2));
-                    if (tempActions[actionName].Item2.executionType == ItemAction.ExecutionType.OnlyFirstTime)
+                    if (actions[actionName].Item2.executionType == ItemAction.ExecutionType.EveryTime || (actions[actionName].Item2.Repeat == 0 && actions[actionName].Item2.executionType == ItemAction.ExecutionType.OnlyFirstTime))
                     {
-                        tempActions[actionName].Item2.Repeat = 0;
+                        if (actions[actionName].Item2.lambdaAction == null)
+                        {
+                            LambdaActions.ExecuteAction(actions[actionName].Item2.ActionName, this, actions[actionName].Item2.Parameters);
+                        }
+                        else
+                        {
+                            actions[actionName].Item2.lambdaAction(this, actions[actionName].Item2.Parameters);
+                        }
                     }
-                }
+                    else if (actions[actionName].Item2.executionType == ItemAction.ExecutionType.NotFirstTime)
+                    {
+                        actions[actionName].Item2.executionType = ItemAction.ExecutionType.EveryTime;
+                    }
+                    actions.Remove(actionName);
+                    if (tempActions[actionName].Item2.Repeat > 0 && tempActions[actionName].Item2.executionType != ItemAction.ExecutionType.StopExecuting)
+                    {
+                        actions.Add(actionName, (now + (long)(tempActions[actionName].Item2.Repeat), tempActions[actionName].Item2));
+                        if (tempActions[actionName].Item2.executionType == ItemAction.ExecutionType.OnlyFirstTime)
+                        {
+                            tempActions[actionName].Item2.Repeat = 0;
+                        }
+                    }
 
+                }
             }
         }
     }
@@ -130,9 +151,10 @@ public class ActionHandler
     /// <param name="action">ItemAction to add</param>
     /// <param name="rewrite">Whether to rewrite running action</param>
     /// <param name="delay">"When to execute the action. Gotta be (now + delay) "</param>
-    public void AddAction(ItemAction action, long delay = 0, RewriteEnum rewrite = RewriteEnum.Rewrite)
+    /// <returns>Name of the action (mainly when duplicating)</returns>
+    public string AddAction(ItemAction action, long delay = 0, RewriteEnum rewrite = RewriteEnum.Rewrite)
     {
-        this.AddAction(action, action.ActionName, delay, rewrite);
+        return this.AddAction(action, action.ActionName, delay, rewrite);
     }
     /// <summary>
     /// Adds a new action to be executed
@@ -140,7 +162,8 @@ public class ActionHandler
     /// <param name="action">ItemAction to add</param>
     /// <param name="storeName">The name the action will be stored in the dictionary under</param>
     /// <param name="rewrite">Whether to rewrite running action</param>
-    public void AddAction(ItemAction action, string storeName, long delay = 0, RewriteEnum rewrite = RewriteEnum.Rewrite)
+    /// <returns>Name of the action (mainly when duplicating)</returns>
+    public string AddAction(ItemAction action, string storeName, long delay = 0, RewriteEnum rewrite = RewriteEnum.Rewrite)
     {
         Dictionary<string, (long, ItemAction)> temp;
         Dictionary<string, ItemAction> tempEveryFrame;
@@ -148,15 +171,11 @@ public class ActionHandler
         {
             temp = actions;
             tempEveryFrame = actionsEveryFrame;
-            if (!GCon.game.ItemsStep.ContainsKey(this.Id))
+            foreach (var type in pauseTypes)
             {
-                if (this is Item)
+                if (!GCon.gameSystems[type].itemStep.Contains(this))
                 {
-                    GCon.game.ItemsStep.Add(this.Id, this);
-                }
-                else
-                {
-                    ToolsUI.UIItemsStep.Add(this);
+                    GCon.gameSystems[type].itemStep.Add(this);
                 }
             }
         }
@@ -178,6 +197,7 @@ public class ActionHandler
             {
                 temp.Add(storeName + storeIndex.ToString(), (delay, action));
                 storeIndex++;
+                return storeName + (storeIndex - 1).ToString();
             }
         }
         else
@@ -189,7 +209,14 @@ public class ActionHandler
                 tempEveryFrame.Remove(storeName);
                 tempEveryFrame.Add(storeName, action);
             }
+            else if (rewrite == RewriteEnum.AddNew)
+            {
+                tempEveryFrame.Add(storeName + storeIndex.ToString(), action);
+                storeIndex++;
+                return storeName + (storeIndex - 1).ToString();
+            }
         }
+        return storeName;
 
     }
 
@@ -204,13 +231,10 @@ public class ActionHandler
             actionsEveryFrame.Remove(name);
         if (actions.Count == 0 && actionsEveryFrame.Count == 0)
         {
-            if (this is Item)
+            foreach (var type in pauseTypes)
             {
-                GCon.game.ItemsStep.Remove(this.Id);
-            }
-            if (this is UIItem u)
-            {
-                ToolsUI.UIItemsStep.Remove(u);
+                if (GCon.gameSystems[type].itemStep.Contains(this))
+                    GCon.gameSystems[type].itemStep.Remove(this);
             }
         }
     }
@@ -220,9 +244,10 @@ public class ActionHandler
     /// </summary>
     public virtual void InnerDispose()
     {
-        if (GCon.game.ItemsStep.ContainsKey(Id))
+        foreach (var type in pauseTypes)
         {
-            GCon.game.ItemsStep.Remove(Id);
+            if (GCon.gameSystems[type].itemStep.Contains(this))
+                GCon.gameSystems[type].itemStep.Remove(this);
         }
     }
 
@@ -231,15 +256,7 @@ public class ActionHandler
     /// </summary>
     public virtual void Dispose()
     {
-        if (this is Item)
-        {
-            GCon.game.ItemsToBeDestroyed.Add(this);
-        }
-        if (this is UIItem u)
-        {
-            ToolsUI.UIItemsToBeDestroyed.Add(u);
-        }
-
+        GCon.game.ItemsToBeDestroyed.Add(this);
     }
 
     public virtual void OnLevelLeave()
@@ -283,9 +300,10 @@ public class ActionHandler
         }
         if (!keepRunning)
         {
-            if (GCon.game.ItemsStep.ContainsKey(Id))
+            foreach (var type in pauseTypes)
             {
-                GCon.game.ItemsStep.Remove(Id);
+                if (GCon.gameSystems[type].itemStep.Contains(this))
+                    GCon.gameSystems[type].itemStep.Remove(this);
             }
         }
     }
@@ -307,10 +325,21 @@ public class ActionHandler
         actionsFrozen.Clear();
         if (getRunning)
         {
-            if (!GCon.game.ItemsStep.ContainsKey(Id))
+            foreach (var type in pauseTypes)
             {
-                GCon.game.ItemsStep.Add(Id, this);
+                if (!GCon.gameSystems[type].itemStep.Contains(this))
+                    GCon.gameSystems[type].itemStep.Add(this);
             }
         }
+    }
+
+    public bool Equals(ActionHandler x, ActionHandler y)
+    {
+        return x.Id == y.Id;
+    }
+
+    public int GetHashCode(ActionHandler obj)
+    {
+        return obj.GetHashCode();
     }
 }

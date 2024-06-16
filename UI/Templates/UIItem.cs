@@ -29,8 +29,22 @@ public class UIItem : ActionHandler
     /// All currently running transitions
     /// </summary>
     private Dictionary<string, Transitable> runningTransitions = new Dictionary<string, Transitable>();
-    public UIItem() { ToolsUI.UIItems.Add(this); }
-    public UIItem(GameObject go, GameObject referenceGo = null) : base()
+    //public UIItem() : base() { ToolsUI.UIItems.Add(this); }
+
+    public bool hoverActivated;
+    public bool clickActivated;
+
+    public UIItem(GameObject go, GameObject referenceGo, ToolsSystem.PauseType pauseType, params ToolsSystem.PauseType[] pauseTypes) : base(true, pauseType, pauseTypes)
+    {
+        SetupUIItem(go, referenceGo);
+        ToolsUI.UIItems.Add(this);
+    }
+    public UIItem(GameObject go, ToolsSystem.PauseType pauseType, params ToolsSystem.PauseType[] pauseTypes) : base(true, pauseType, pauseTypes)
+    {
+        SetupUIItem(go);
+        ToolsUI.UIItems.Add(this);
+    }
+    public UIItem(GameObject go, GameObject referenceGo = null) : base(true, ToolsSystem.PauseType.Inventory)
     {
         SetupUIItem(go, referenceGo);
         ToolsUI.UIItems.Add(this);
@@ -39,6 +53,10 @@ public class UIItem : ActionHandler
     /// <param name="referenceGo">Game object which reacts to event</param>
     protected void SetupUIItem(GameObject go, GameObject referenceGo = null)
     {
+        if (go == null)
+        {
+            return;
+        }
         this.Go = go;
         UIScript just;
         if (!go.TryGetComponent<UIScript>(out just))
@@ -50,42 +68,64 @@ public class UIItem : ActionHandler
     }
     public virtual void OnMouseEnterDefault()
     {
-        if (OnMouseEnter != null)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            OnMouseEnter(this);
+            if (OnMouseEnter != null)
+            {
+                OnMouseEnter(this);
+            }
         }
+        hoverActivated = true;
 
     }
     public virtual void OnMouseExitDefault()
     {
-        if (OnMouseExit != null)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            OnMouseExit(this);
+            if (OnMouseExit != null)
+            {
+                OnMouseExit(this);
+            }
         }
+        hoverActivated = false;
+
     }
     public virtual void OnMouseDownDefault()
     {
-        if (OnMouseDown != null)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            OnMouseDown(this);
+            if (OnMouseDown != null)
+            {
+                OnMouseDown(this);
+            }
         }
+        clickActivated = true;
+
     }
     public virtual void OnMouseUpDefault()
     {
-        if (OnMouseUp != null)
+        if (this.pauseTypes.Contains(GCon.GetPausedType()))
         {
-            OnMouseUp(this);
+            if (OnMouseUp != null)
+            {
+                OnMouseUp(this);
+            }
         }
+        clickActivated = false;
+
     }
-    public void StartTransition(string name = "")
+    public void StartTransition(string name = "", bool onlyIfEnded = false)
     {
         if (transitions.ContainsKey(name))
         {
-            transitions[name].Start();
-            if (!runningTransitions.ContainsKey(name))
+            if (!runningTransitions.ContainsKey(name) /*&& ((!transitions[name].CanBeReturned() && onlyIfEnded) || !onlyIfEnded)*/)
             {
+                transitions[name].Start();
                 runningTransitions.Add(name, transitions[name]);
-
+            }
+            else if (!onlyIfEnded)
+            {
+                transitions[name].Start();
             }
             if (!ToolsUI.transitables.Contains(this))
             {
@@ -197,10 +237,7 @@ public class UIItem : ActionHandler
         }
 
     }
-    public override void Dispose()
-    {
-        ToolsUI.UIItemsToBeDestroyed.Add(this);
-    }
+
 
     private void EndTransition(string name, bool endingAnimation = false)
     {

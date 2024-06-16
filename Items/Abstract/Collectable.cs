@@ -10,18 +10,18 @@ using UnityEngine.Tilemaps;
 /// <summary>
 /// Something player can pick up from ground
 /// </summary>
-public abstract class Collectable : Item, IInteractable
+public class Collectable : Item, IInteractable
 {
-    public Slotable SlotableRef { get; private set; }
+    public ICollectableRef SlotableRef { get; private set; }
     public Collectable() { }
 
-    protected Collectable(Slotable slotableRef, bool isSolid = false) : base(slotableRef.Prefab, isSolid)
+    public Collectable(ICollectableRef slotableRef, bool isSolid = false) : base(slotableRef.Prefab, isSolid)
     {
         DeleteOnLeave = false;
         this.SlotableRef = slotableRef;
     }
 
-    protected Collectable(Slotable slotableRef, Vector2 pos, Tilemap map = null) : base(pos, slotableRef.Prefab, false, map)
+    public Collectable(ICollectableRef slotableRef, Vector2 pos, Tilemap map = null) : base(pos, slotableRef.Prefab, false, map)
     {
         DeleteOnLeave = false;
         this.SlotableRef = slotableRef;

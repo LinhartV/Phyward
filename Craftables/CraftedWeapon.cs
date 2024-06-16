@@ -21,5 +21,10 @@ public class CraftedWeapon : Upgradable
         base.AssignPrefab();
         Weapon.SetupWeapon();
     }
+
+    public override ICollectableRef DeepClone()
+    {
+        return new CraftedWeapon(this.Name, this.Subheading, this.Description, this.Tier, GameObjects.GetPrefabByName(PrefabName),this.Weapon, this.NeededMaterials);
+    }
 }
 

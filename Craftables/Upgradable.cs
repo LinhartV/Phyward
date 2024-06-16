@@ -9,7 +9,7 @@ public abstract class Upgradable : Craftable
 {
 	public Upgradable(){}
 
-    protected Upgradable(string name, string subheading, string description, int tier, ToolsUI.FilterType filter, GameObject prefab, params (Slotable, int)[] neededMaterials) : base(name, subheading, description, tier, filter, prefab, neededMaterials)
+    protected Upgradable(string name, string subheading, string description, int tier, ToolsUI.FilterType filter, GameObject prefab, params (Slotable, int)[] neededMaterials) : base(name, subheading, description, tier, filter, prefab, true, neededMaterials)
     {
     }
 }

@@ -7,5 +7,5 @@ using System.Threading.Tasks;
 
 public interface IPausable
 {
-    public void TriggerPause(bool pauseOn);
+    public void TriggerPause(ToolsSystem.PauseType pauseType);
 }

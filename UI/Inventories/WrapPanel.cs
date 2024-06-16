@@ -7,19 +7,19 @@ using UnityEngine;
 
 public class WrapPanel : UIItem
 {
-    public SlotTemplate qBonusSlot;
-    public SlotTemplate eBonusSlot;
+    public LoadingSlotTemplate qBonusSlot;
+    public LoadingSlotTemplate eBonusSlot;
     public SlotTemplate weaponSlot;
     public TickButtonTemplate autoPickup;
     private float inventoryDownY = -940;
     private float inventoryUpY = 0;
 
-    public WrapPanel()
+    public WrapPanel() : base(null, ToolsSystem.PauseType.Inventory, ToolsSystem.PauseType.InGame)
     {
         this.Go = GameObject.FindGameObjectWithTag("WrapInventory");
         this.referenceGo = this.Go;
         SetupInventory();
-    }   
+    }
     public void OpenInventory()
     {
         StartTransition("reveal");
@@ -36,7 +36,7 @@ public class WrapPanel : UIItem
         AddTransition(new Lerpable(0.7f, new Vector2(0, inventoryUpY), ToolsUI.easeOut, false, true, () => { ToolsUI.ActiveInventory.OnOpenInventory(); }, () =>
         {
             ToolsUI.ActiveInventory.OnClosedInventory();
-            GCon.Paused = false;
+            GCon.PopPausedType();
             ToolsUI.SetCursor(ToolsUI.aimCursor);
             ToolsUI.DropDraggedObject();
         }, 0.4f), "reveal");
@@ -44,9 +44,62 @@ public class WrapPanel : UIItem
 
     private void SetupPresetSlots()
     {
-        
-        qBonusSlot = new SlotTemplate(GameObject.FindGameObjectWithTag("qBonus"), false, false, false, (SlotTemplate slotable) => { return ToolsUI.draggedSlot.SlotableRef is Edible; });
-        eBonusSlot = new SlotTemplate(GameObject.FindGameObjectWithTag("eBonus"), false, false, false, (SlotTemplate slotable) => { return ToolsUI.draggedSlot.SlotableRef is Edible; });
+
+        qBonusSlot = new LoadingSlotTemplate(GameObject.FindGameObjectWithTag("qBonus"), false, false, false, (SlotTemplate slotable) =>
+        {
+            bool accepted = ToolsUI.draggedSlot.SlotableRef is Edible && eBonusSlot.SlotableRef != ToolsUI.draggedSlot.SlotableRef;
+            if (accepted && ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot) && GCon.game.Player.PlayerControl.backpack.Count >= GCon.game.Player.PlayerControl.SlotSpace)
+            {
+                accepted = false;
+            }
+            return accepted;
+        }, (SlotTemplate slot) =>
+        {
+            slot.ChangePlaceHolder("");
+            GCon.game.Player.QBonus = (ToolsUI.draggedSlot.SlotableRef as Edible).DeepClone() as Edible;
+            GCon.game.Player.PlayerControl.QBonusRef = (slot.SlotableRef as Edible);
+            if (ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot))
+            {
+                GCon.game.Player.PlayerControl.backpack.Add(ToolsUI.draggedSlot.SlotableRef);
+                GCon.game.Player.PlayerControl.RemoveFromBase(ToolsUI.draggedSlot.SlotableRef);
+                ToolsUI.ActiveInventory.UpdateInventory();
+            }
+        }, (SlotTemplate slot) =>
+        {
+            GCon.game.Player.PlayerControl.backpack.Remove(slot.SlotableRef);
+            GCon.game.Player.QBonus = null;
+            slot.ChangePlaceHolder("Q");
+        }, true, true, ToolsSystem.PauseType.InGame, ToolsSystem.PauseType.Inventory);
+
+
+
+        eBonusSlot = new LoadingSlotTemplate(GameObject.FindGameObjectWithTag("eBonus"), false, false, false, (SlotTemplate slotable) =>
+        {
+            bool accepted = ToolsUI.draggedSlot.SlotableRef is Edible && qBonusSlot.SlotableRef != ToolsUI.draggedSlot.SlotableRef;
+            if (accepted && ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot) && GCon.game.Player.PlayerControl.backpack.Count >= GCon.game.Player.PlayerControl.SlotSpace)
+            {
+                accepted = false;
+            }
+            return accepted;
+        }, (SlotTemplate slot) =>
+        {
+            slot.ChangePlaceHolder("");
+            GCon.game.Player.EBonus = (ToolsUI.draggedSlot.SlotableRef as Edible).DeepClone() as Edible;
+            GCon.game.Player.PlayerControl.EBonusRef = (slot.SlotableRef as Edible);
+            if (ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot))
+            {
+                GCon.game.Player.PlayerControl.backpack.Add(ToolsUI.draggedSlot.SlotableRef);
+                GCon.game.Player.PlayerControl.RemoveFromBase(ToolsUI.draggedSlot.SlotableRef);
+                ToolsUI.ActiveInventory.UpdateInventory();
+            }
+        }, (SlotTemplate slot) =>
+        {
+            GCon.game.Player.PlayerControl.backpack.Remove(slot.SlotableRef);
+            GCon.game.Player.EBonus = null;
+            slot.ChangePlaceHolder("E");
+        }, true, true, ToolsSystem.PauseType.InGame, ToolsSystem.PauseType.Inventory);
+
+
         weaponSlot = new SlotTemplate(GameObject.FindGameObjectWithTag("WeaponSlot"), false, false, false, (SlotTemplate slotable) =>
         {
             bool accepted = ToolsUI.draggedSlot.SlotableRef is CraftedWeapon;
@@ -65,7 +118,12 @@ public class WrapPanel : UIItem
                 GCon.game.Player.PlayerControl.RemoveFromBase(ToolsUI.draggedSlot.SlotableRef);
                 ToolsUI.ActiveInventory.UpdateInventory();
             }
-        }, (SlotTemplate slot) => { GCon.game.Player.Weapon = null; });
+        }, (SlotTemplate slot) => { GCon.game.Player.Weapon = null; }, true);
+
+
+
+        eBonusSlot.ChangePlaceHolder("E");
+        qBonusSlot.ChangePlaceHolder("Q");
         autoPickup = new TickButtonTemplate(GameObject.FindGameObjectWithTag("AutoPickup"), true, () => { GCon.game.Player.PlayerControl.AutoPickup = true; }, () => { GCon.game.Player.PlayerControl.AutoPickup = false; });
 
     }
@@ -77,7 +135,15 @@ public class WrapPanel : UIItem
         {
             weaponSlot.AddSlotable(GCon.game.Player.PlayerControl.WeaponSlotRef);
         }
+        if (GCon.game.Player.PlayerControl.QBonusRef != null)
+        {
+            qBonusSlot.AddSlotable(GCon.game.Player.PlayerControl.QBonusRef);
+        }
+        if (GCon.game.Player.PlayerControl.EBonusRef != null)
+        {
+            eBonusSlot.AddSlotable(GCon.game.Player.PlayerControl.EBonusRef);
+        }
     }
-    
+
 }
 

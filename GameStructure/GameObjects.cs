@@ -27,7 +27,7 @@ public static class GameObjects
     public static GameObject redSmallEnemy;
     public static GameObject slot;
     public static GameObject unitAnimation;
-    public static GameObject counter;
+    public static GameObject text;
     public static GameObject slingshot;
     public static GameObject sling;
     public static GameObject blowgun;
@@ -35,9 +35,15 @@ public static class GameObjects
     public static GameObject craftable;
     public static GameObject crumblingRock;
     public static GameObject burningRock;
+    public static GameObject scroll;
+    public static GameObject area;
+    public static GameObject volume;
+    public static GameObject inertia;
+    public static GameObject craftingScroll;
+    public static GameObject medkit;
 
 
-    public static void SetPrefabs(GameObject _burningRock, GameObject _crumblingRock,GameObject _craftable, GameObject _baseHouse, GameObject _sling, GameObject _blowgun, GameObject _slingshot,GameObject _counter, GameObject _unitAnimation, GameObject _slot, GameObject _speed, GameObject _frequency, GameObject _mass, GameObject _length, GameObject _redSmallEnemy, GameObject _healthBarStandard, GameObject _purpleEnemy, GameObject _time, GameObject _redSmallShot, GameObject _fireSwarmShot, GameObject _exit, GameObject _empty, GameObject _player, GameObject _blueShot, Tilemap _solidLayer)
+    public static void SetPrefabs(GameObject _medkit, GameObject _craftingScroll, GameObject _inertia, GameObject _volume, GameObject _area, GameObject _scroll, GameObject _burningRock, GameObject _crumblingRock,GameObject _craftable, GameObject _baseHouse, GameObject _sling, GameObject _blowgun, GameObject _slingshot,GameObject _counter, GameObject _unitAnimation, GameObject _slot, GameObject _speed, GameObject _frequency, GameObject _mass, GameObject _length, GameObject _redSmallEnemy, GameObject _healthBarStandard, GameObject _purpleEnemy, GameObject _time, GameObject _redSmallShot, GameObject _fireSwarmShot, GameObject _exit, GameObject _empty, GameObject _player, GameObject _blueShot, Tilemap _solidLayer)
     {
         tilemaps.Add(_solidLayer.name, _solidLayer);
         prefabs.Add(_empty.name, _empty);
@@ -64,6 +70,18 @@ public static class GameObjects
         prefabs.Add(_craftable.name, _craftable);
         prefabs.Add(_crumblingRock.name, _crumblingRock);
         prefabs.Add(_burningRock.name, _burningRock);
+        prefabs.Add(_scroll.name, _scroll);
+        prefabs.Add(_area.name, _area);
+        prefabs.Add(_volume.name, _volume);
+        prefabs.Add(_inertia.name, _inertia);
+        prefabs.Add(_craftingScroll.name, _craftingScroll);
+        prefabs.Add(_medkit.name, _medkit);
+        medkit = _medkit;
+        craftingScroll = _craftingScroll;
+        inertia = _inertia;
+        volume = _volume;
+        area = _area;
+        scroll = _scroll;
         burningRock = _burningRock;
         crumblingRock = _crumblingRock;
         craftable = _craftable;
@@ -71,7 +89,7 @@ public static class GameObjects
         sling = _sling;
         blowgun = _blowgun;
         slingshot = _slingshot;
-        counter = _counter;
+        text = _counter;
         unitAnimation = _unitAnimation;
         slot = _slot;
         healthBarStandard = _healthBarStandard;

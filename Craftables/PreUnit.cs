@@ -21,9 +21,13 @@ public class PreUnit : Slotable
     }
     public List<PreUnit> unitNumeratorList = new List<PreUnit>();
     public List<PreUnit> unitDenominatorList = new List<PreUnit>();
+    public List<PreUnit> originalUnitNumeratorList = new List<PreUnit>();
+    public List<PreUnit> originalUnitDenominatorList = new List<PreUnit>();
 
     public PreUnit(string name, string description, string unit, List<PreUnit> numerator, List<PreUnit> denominator, GameObject prefab) : base(name, unit, description, ToolsUI.FilterType.units, prefab, true)
     {
+        originalUnitNumeratorList = new List<PreUnit>(numerator);
+        originalUnitDenominatorList = new List<PreUnit>(denominator);
         DecomposeUnit(numerator, denominator);
     }
 
@@ -43,5 +47,9 @@ public class PreUnit : Slotable
 
     }
 
+    public override ICollectableRef DeepClone()
+    {
+        return new PreUnit(this.Name, this.Description, this.Subheading, this.unitNumeratorList, this.unitDenominatorList, GameObjects.GetPrefabByName(PrefabName));
+    }
 }
 

@@ -39,7 +39,7 @@ public class AcceleratedMovement : IMovement
         bool stopped;
         if (this.MovementSpeed > Constants.MIN_VALUE)
         {
-            MovementSpeed -= friction * frictionCoef * GCon.percentageOfFrame;
+            MovementSpeed -= friction * frictionCoef * GCon.frameTime;
             if (MovementSpeed < 0)
             {
                 MovementSpeed = 0;
@@ -71,7 +71,7 @@ public class AcceleratedMovement : IMovement
             isUpdated = true;
             if (MovementSpeed < baseSpeed)
             {
-                MovementSpeed += Acceleration * GCon.percentageOfFrame;
+                MovementSpeed += Acceleration * GCon.frameTime;
             }
             else
             {
