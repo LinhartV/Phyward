@@ -19,7 +19,7 @@ public static class ToolsGame
     /// For each element of PlayerActionEnum assign lambda function for keyPress and keyRelease by name.
     /// </summary>
     public static Dictionary<PlayerActionsEnum, (Action, Action)> actions = new();
-    public enum PlayerActionsEnum { none = 0, moveUp = 1, moveDown = 2, moveLeft = 3, moveRight = 4, fire = 5, abilityQ = 6, abilityE = 7, other = 8, cheat = 9, inventory = 10, deselect = 11, interact = 12, closing = 13 }
+    public enum PlayerActionsEnum { none = 0, moveUp = 1, moveDown = 2, moveLeft = 3, moveRight = 4, fire = 5, abilityQ = 6, abilityE = 7, other = 8, cheat = 9, inventory = 10, deselect = 11, interact = 12, closing = 13, escape = 14 }
 
     public enum MazeTile
     {
@@ -35,19 +35,60 @@ public static class ToolsGame
     public static void DebugSetup()
     {
 
-        //GCon.game.Player.PlayerControl.DiscoverNewUnit(Units.speed);
+       /* GCon.game.Player.PlayerControl.backpack.Add(CraftedEdibles.Portal());
+        GCon.game.Player.PlayerControl.backpack.Add(CraftedEdibles.AcceleratedHeal());
+        GCon.game.Player.PlayerControl.backpack.Add(CraftedEdibles.AcceleratedHeal());
+        GCon.game.Player.PlayerControl.backpack.Add(CraftedEdibles.FastReload());
+        GCon.game.Player.PlayerControl.backpack.Add(CraftedArmors.TimeArmor());
+        GCon.game.Player.PlayerControl.backpack.Add(CraftedWeapons.CrumblingRock());*/
     }
 
     public static void CreateGame()
     {
-        GCon.game.bioms.Add(new MeadowBiom("just.mp3", new LinearGenerator(1, 20, 0, false, 1, new BlockInsert(0.125f, new RandomSpawner((() => { return new TimeEnemy(1); }, 3), (() => { return new MassEnemy(1); }, 1))))));
+        AddBioms();
+        GCon.game.BiomIndex = -1;
+        GCon.game.Player = new Player(new Vector2(0, 0), 4f, 50, 25f, null, 1, 1, 1, 1, 100, null);
 
+        EnterNextBiom();
+    }
 
-        GCon.game.CurBiom = GCon.game.bioms[0];
-        GCon.game.CurLevel = GCon.game.CurBiom.levels[0];
-        GCon.game.Player = (new Player(GCon.game.CurLevel.GetEmptyPosition(), 4f, 50, 25f, null/*new BasicWeapon(ToolsMath.SecondsToFrames(1), 10, 5, ToolsMath.SecondsToFrames(1), GameObjects.redSmallShot)*/, 1, 1, 1, 1, 100));
+    public static void AddBioms()
+    {
+        GCon.game.biomsGenererationList.Add(() => { return FirstBiom.GetFirstBiom(); });
+        GCon.game.biomsGenererationList.Add(() => { return SecondBiom.GetSecondBiom(); });
+        GCon.game.biomsGenererationList.Add(() => { return ThirdBiom.GetThirdBiom(); });
+    }
+
+    public static void EnterNextBiom()
+    {
+        GCon.game.IdLevels = 0;
+        GCon.game.BiomIndex++;
+        GCon.game.Coef /= 0.9f;
+        if (GCon.game.BiomIndex < GCon.game.biomsGenererationList.Count)
+        {
+            if (GCon.game.BiomIndex > 0)
+            {
+                GCon.game.bioms.Add(GCon.game.biomsGenererationList[GCon.game.BiomIndex]());
+                GCon.game.CurBiom = GCon.game.bioms[GCon.game.bioms.Count - 1];
+
+                ToolsPhyward.EnterLevel(GCon.game.CurBiom.FirstBiomLevel);
+            }
+            else
+            {
+                GCon.game.bioms.Add(GCon.game.biomsGenererationList[GCon.game.BiomIndex]());
+                GCon.game.CurBiom = GCon.game.bioms[GCon.game.bioms.Count - 1];
+                GCon.game.CurLevel = GCon.game.CurBiom.FirstBiomLevel;
+                ToolsPhyward.BuildLevel(GCon.game.CurLevel, null, GCon.game.Player.Prefab.transform.position);
+            }
+        }
+        else
+        {
+            ToolsUI.TriggerEndPanel();
+        }
+        GCon.game.SavedLevelId = GCon.game.CurLevel.Id;
 
     }
+
     /// <summary>
     /// Pauses or resumes all IPausables objects
     /// </summary>
@@ -63,10 +104,6 @@ public static class ToolsGame
         }
     }
 
-   
-
-
-
     public static void DefaultAssignOfKeys()
     {
         KeyController.AddKey(KeyCode.W, new RegisteredKey(PlayerActionsEnum.moveUp), KeyCode.UpArrow);
@@ -80,7 +117,8 @@ public static class ToolsGame
         KeyController.AddKey(KeyCode.Space, new RegisteredKey(PlayerActionsEnum.fire), KeyCode.Mouse0);
         KeyController.AddKey(KeyCode.Mouse0, new RegisteredKey(PlayerActionsEnum.deselect, ToolsSystem.PauseType.Inventory));
         KeyController.AddKey(KeyCode.F, new RegisteredKey(PlayerActionsEnum.interact, ToolsSystem.PauseType.InGame));
-        KeyController.AddKey(KeyCode.F, new RegisteredKey(PlayerActionsEnum.closing, ToolsSystem.PauseType.Inventory), KeyCode.Escape);
+        KeyController.AddKey(KeyCode.F, new RegisteredKey(PlayerActionsEnum.closing, ToolsSystem.PauseType.Inventory));
+        KeyController.AddKey(KeyCode.Escape, new RegisteredKey(PlayerActionsEnum.escape, ToolsSystem.PauseType.Inventory, ToolsSystem.PauseType.InGame, ToolsSystem.PauseType.Animation));
 
     }
 
@@ -182,6 +220,32 @@ public static class ToolsGame
         {
         }
         ));
+        actions.Add(PlayerActionsEnum.escape, (() =>
+        {
+            if (GCon.GetPausedType() == ToolsSystem.PauseType.Animation)
+            {
+                ToolsUI.scrollPanel.ReturnTransition("show");
+            }
+            else if (Tutorial.tutorialActive)
+            {
+                Tutorial.CloseTutorial();
+            }
+            else if (GCon.GetPausedType() == ToolsSystem.PauseType.Inventory)
+            {
+                ToolsUI.TriggerInventory(true);
+            }
+            else if (GCon.GetPausedType() == ToolsSystem.PauseType.InGame)
+            {
+                ToolsUI.TriggerMenuPanel();
+            }
+            else if (GCon.GetPausedType() == ToolsSystem.PauseType.Menu && ToolsUI.endPanel.Go.activeInHierarchy)
+            {
+                Application.Quit();
+            }
+        }, () =>
+        {
+        }
+        ));
         actions.Add(PlayerActionsEnum.abilityE, (() =>
         {
             GCon.game.Player.UseEBonus();
@@ -212,8 +276,9 @@ public static class ToolsGame
         SetupActions();
         ToolsPhyward.InstantiateEnemyInfos();
         LambdaActions.SetupLambdaActions();
-        ToolsPhyward.InstantiateAllCraftables();
+
         AllCrafts.SetupAllCrafts();
+        Tutorial.SetupTutorial();
 
 #if PREDICTED
         string[] txt = File.ReadAllLines(PATH);

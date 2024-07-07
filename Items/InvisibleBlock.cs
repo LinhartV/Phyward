@@ -6,14 +6,16 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-/// <summary>
-/// Class for managing exits from a particular level.
-/// </summary>
 [Serializable]
-public class Block : Item
+public class InvisibleBlock : Block
 {
-    public Block(){
+    public InvisibleBlock()
+    {
         this.IsSolid = true;
+    }
+
+    public InvisibleBlock(Vector2 pos) : base(pos, GameObjects.empty)
+    {
     }
 }
 

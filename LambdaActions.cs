@@ -19,20 +19,28 @@ public static class LambdaActions
     /// </summary>
     public static Dictionary<string, LambdaAction> lambdaActions = new();
 
+    public static void AddItemLambdaAction(string name, ActionHandler item, LambdaAction action)
+    {
+        lambdaActions.Add(name + item.GetType().Name, action);
+    }
 
     public static void SetupLambdaActions()
     {
+        lambdaActions.Add("addDelayedAction", (item, parameter) =>
+        {
+            item.AddAction(parameter[0] as ItemAction, 0, (ActionHandler.RewriteEnum)parameter[1]);
+        });
         lambdaActions.Add("receiveDamage", (item, parameter) =>
         {
             var character = (item as Character);
             float difference = (float)Convert.ToDouble(parameter[0]);
-            character.ChangeLives(-difference);
+            character.LivedHandler.ReceiveDamage(difference);
         });
         lambdaActions.Add("randomWalk", (item, parameter) =>
         {
             if ((item as Movable).MovementsControlled["randomMovement"].MovementSpeed == 0)
             {
-                (item as Movable).MovementsControlled["randomMovement"].ResetMovementSpeed((item as Movable).BaseSpeed / 4);
+                ((item as Movable).MovementsControlled["randomMovement"] as AcceleratedMovement).ResetRealMovementSpeed((item as Movable).BaseSpeed / 4);
                 (item as Movable).RotateControlledMovement("randomMovement", (float)(ToolsGame.Rng() * Math.PI * 2));
             }
         });
@@ -81,17 +89,19 @@ public static class LambdaActions
         {
             item.Dispose();
         });
+        lambdaActions.Add("disposeShot", (item, parameter) =>
+        {
+            (item as Shot).OnLand();
+        });
         lambdaActions.Add("death", (item, parameter) =>
         {
             (item as Character).Death();
         });
         lambdaActions.Add("faceInDirection", (item, parameter) =>
         {
-            if (!((item is Movable m) && m.SetAngle && m.GetMovementSpeed() == 0))
-            {
-                var angle = ToolsMath.PolarToCartesian((item as Item).Angle, 1);
-                (item as Item).Prefab.GetComponentInChildren<SpriteRenderer>().transform.up = new Vector2(angle.Item1, angle.Item2);
-            }
+            var angle = ToolsMath.PolarToCartesian((item as Item).Angle, 1);
+            (item as Item).Prefab.GetComponentInChildren<SpriteRenderer>().transform.up = new Vector2(angle.Item1, angle.Item2);
+
         });
         lambdaActions.Add("followCursor", (item, parameter) =>
         {
@@ -103,17 +113,35 @@ public static class LambdaActions
         });
         lambdaActions.Add("heal", (item, parameter) =>
         {
-            GCon.game.Player.ChangeLives((float)parameter[0]);
+            GCon.game.Player.LivedHandler.ChangeLives((float)parameter[0]);
+        });
+        lambdaActions.Add("acceleratedHeal", (item, parameter) =>
+        {
+            GCon.game.Player.LivedHandler.ChangeLives((float)parameter[0]);
+            GCon.game.Player.ChangeItemActionParameter((string)parameter[parameter.Length - 1], 0, (float)parameter[0] + 0.001f);
         });
         lambdaActions.Add("stopBonus", (item, parameter) =>
         {
             GCon.game.Player.DeleteAction((string)parameter[0]);
+        });
+        lambdaActions.Add("moveOneTileUp", (item, parameter) =>
+        {
+            GCon.game.Player.Prefab.transform.position = new Vector2(GCon.game.Player.Prefab.transform.position.x, GCon.game.Player.Prefab.transform.position.y + 1);
+        });
+        lambdaActions.Add("stopFastReload", (item, parameter) =>
+        {
+            GCon.game.Player.CharReloadTime *= 2;
         });
         lambdaActions.Add("slotCountdown", (item, parameter) =>
         {
             LoadingSlotTemplate lst = parameter[0] as LoadingSlotTemplate;
             lst.SetLoadingValue(GCon.frameTime);
         });
+        lambdaActions.Add("stopSpeedIncrease", (item, parameter) =>
+        {
+            GCon.game.Player.BaseSpeed /= 1.5f;
+        });
+
         lambdaActions.Add("ShowDescription", (item, parameter) =>
         {
             if (item == null || (item as SlotTemplate).Go == null || (item as SlotTemplate).SlotableRef.Prefab == null || !(item as SlotTemplate).Go.activeInHierarchy)
@@ -149,6 +177,11 @@ public static class LambdaActions
             ToolsUI.descriptionPanel.Go.transform.GetChild(1).gameObject.GetComponent<TMPro.TextMeshProUGUI>().text = ui.Subheading;
             ToolsUI.descriptionPanel.Go.transform.GetChild(2).gameObject.GetComponent<TMPro.TextMeshProUGUI>().text = ui.Description;
             ToolsUI.descriptionPanel.Go.transform.GetChild(3).gameObject.GetComponent<Image>().sprite = ui.Prefab.transform.GetChild(0).gameObject.GetComponent<Image>().sprite;
+        });
+        lambdaActions.Add("swirl", (item, parameter) =>
+        {
+            var shot = item as SwarmShot;
+            shot.RotateControlledMovement("swirl", (int)parameter[0] * ToolsGame.Rng() * (float)Math.PI / 10 * (float)parameter[1]);
         });
     }
     public static void ExecuteAction(string actionName, ActionHandler item, params object[] parameters)

@@ -16,10 +16,9 @@ public class LinearGenerator : IBiomGenerator
     {
     }
 
-    override public Dictionary<int, Level> GenerateBiom(Biom biom)
+    override public void GenerateBiom(Biom biom)
     {
         int currentId = GCon.game.IdLevels;
-        Dictionary<int, Level> levels = new Dictionary<int, Level>();
         //real level structure that will be converted to level
         Stack<LevelStructure> levelStructures = new Stack<LevelStructure>();
         //just for checking the lattice (if dead end happens, algo will pop levelStructures untill it can continue.
@@ -75,11 +74,8 @@ public class LinearGenerator : IBiomGenerator
             currentId++;
         }
         var arr = levelStructures.ToArray();
-        for (int i = 0; i < arr.Length; i++)
-        {
-            levels.Add(GCon.game.IdLevels, CreateLevel(ToolsMath.GetRandomElement<ILevelGenerator>(levelGenerators), biom, arr[arr.Length - 1 - i].cellWidth * cellSize, arr[arr.Length - 1 - i].cellHeight * cellSize, arr[arr.Length - 1 - i].ExitsAr));
-        }
-        return levels;
+        
+        GenerateLevelsFromStructures(arr, biom);
     }
     
 

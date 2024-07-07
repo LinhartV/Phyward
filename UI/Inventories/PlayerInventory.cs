@@ -103,8 +103,8 @@ public class PlayerInventory : Inventory
     private void SetupPresetSlots()
     {
         SetupFilterButtons();
-        armorSlot = new SlotTemplate(GameObject.FindGameObjectWithTag("Armor"), false, false, false, (SlotTemplate slotable) => { return ToolsUI.draggedSlot.SlotableRef is Armor; }, (SlotTemplate slot) => { /*TODO Add armor*/});
-        binSlot = new SlotTemplate(GameObject.FindGameObjectWithTag("Bin"), true, false, true, (SlotTemplate slotable) => { return true; }, (SlotTemplate slot) =>
+       // armorSlot = new SlotTemplate(GameObject.FindGameObjectWithTag("CraftedArmor"), false, false, false, (SlotTemplate slotable) => { return ToolsUI.draggedSlot.SlotableRef is CraftedArmor; }, (SlotTemplate slot) => { /*TODO Add armor*/});
+        binSlot = new SlotTemplate(GameObject.FindGameObjectWithTag("Bin"), true, false, true, (SlotTemplate slotable) => { return GCon.game.TutorialPhase > 4 && GCon.game.TutorialPhase != 6; }, (SlotTemplate slot) =>
         {
             if (ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot))
             {

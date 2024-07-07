@@ -45,7 +45,12 @@ public abstract class IWeapon
 
     protected void Fire(Shot shot)
     {
-        GCon.game.CurLevel.AddItem(shot);
+        if (Character.Armor != null && Character.Armor.ShotModificator != null)
+        {
+            GCon.game.CurLevel.AddItem(Character.Armor.ShotModificator(shot));
+        }
+        else
+            GCon.game.CurLevel.AddItem(shot);
     }
     public abstract void Fire();
 }

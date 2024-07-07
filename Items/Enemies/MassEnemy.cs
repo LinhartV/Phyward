@@ -18,20 +18,20 @@ public class MassEnemy : Enemy
     {
     }
     /// <param name="coef">Boost of certain parameters - larger number means harder enemy</param>
-    public MassEnemy(float coef) : base(coef, 0.6f, new ToAndFroIdleMovement(), 6, 1.5f, 0.8f, 70, GameObjects.purpleEnemy)
+    public MassEnemy(float coef, List<ToolsPhyward.Drop> l = null) : base(coef, 0.6f, new ToAndFroIdleMovement(), 6, 1.5f, 0.8f, 70, GameObjects.purpleEnemy)
     {
+        if (l == null)
+        {
+            dropList = new List<ToolsPhyward.Drop>
+            {
+                new ToolsPhyward.Drop(1, 2, 1, () => { return new Unit(Units.Mass()); })
+            };
+        }
+        else dropList = l;
         SetAngle = true;
         AddAction(new ItemAction("checkDistanceMassEnemy", 1));
     }
 
-    public override void Drop()
-    {
-        List<ToolsPhyward.Drop> l = new List<ToolsPhyward.Drop>
-        {
-            new ToolsPhyward.Drop(1, 5, 1, () => { return new Unit(Units.Mass()); })
-        };
-        ToolsPhyward.DropDrops(l, this.Prefab.transform.position);
-    }
     [JsonIgnore]
     private static bool staticCalled = false;
     protected override void SetupItem()

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public abstract class Character : Movable
+public abstract class Character : Movable, ILived
 {
     //Coeficients modifying weapon
     public bool IsFriendly { get; private set; }
@@ -15,15 +15,36 @@ public abstract class Character : Movable
     public float CharShotSpeed { get; set; }
     public float CharShotDuration { get; set; }
     public float CharDispersion { get; set; }
-    public float Lives { get; private set; }
-    public float MaxLives { get; set; }
-    public float CharReloadTime { get; set; }
+    [JsonProperty]
+    private float charReloadTime;
+    public float CharReloadTime
+    {
+        get => charReloadTime; set
+        {
+            charReloadTime = value;
+            if (Weapon!=null)
+            {
+                this.ChangeRepeatTime(charReloadTime * Weapon.ReloadTime, "fire");
+            }
+        }
+    }
+    /// <summary>
+    /// because sometimes my characters dies multiple times...
+    /// </summary>
+    private bool alreadyDied = false;
+    public StandardHealthBar HealthBar { get; set; }
+    [JsonProperty]
+    private Armor armor;
+    public Armor Armor
+    {
+        get { return armor; }
+        set
+        {
+            armor = value;
+        }
+    }
     [JsonProperty]
     private IWeapon weapon;
-    [JsonIgnore]
-    protected LineRenderer fillBar;
-    [JsonIgnore]
-    protected LineRenderer damagebar;
     public IWeapon Weapon
     {
         get { return weapon; }
@@ -36,28 +57,31 @@ public abstract class Character : Movable
             }
         }
     }
+
+    public LivedHandler LivedHandler { get; protected set; }
+
     public Character() { }
-    public Character(Vector2 pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isFriendly, bool isSolid, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, isSolid, map)
+    public Character(Vector2 pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isFriendly, bool isSolid, Armor armor, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, prefab, isSolid, map)
     {
-        Constructor(isFriendly, charDamage, charReloadTime, lives, charShotSpeed, charShotDuration, weapon);
+        Constructor(isFriendly, charDamage, charReloadTime, lives, charShotSpeed, charShotDuration, weapon, armor);
     }
 
-    protected Character(float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isFriendly, bool isSolid) : base(baseSpeed, acceleration, friction, prefab, isSolid)
+    protected Character(float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, GameObject prefab, bool isFriendly, bool isSolid, Armor armor) : base(baseSpeed, acceleration, friction, prefab, isSolid)
     {
-        Constructor(isFriendly, charDamage, charReloadTime, lives, charShotSpeed, charShotDuration, weapon);
+        Constructor(isFriendly, charDamage, charReloadTime, lives, charShotSpeed, charShotDuration, weapon, armor);
     }
 
-    private void Constructor(bool isFriendly, float charDamage, float charReloadTime, float lives, float charShotSpeed, float charShotDuration, IWeapon weapon)
+    private void Constructor(bool isFriendly, float charDamage, float charReloadTime, float lives, float charShotSpeed, float charShotDuration, IWeapon weapon, Armor armor)
     {
+        this.armor = armor;
         this.IsFriendly = isFriendly;
         this.CharDamage = charDamage;
         this.CharReloadTime = charReloadTime;
         this.Weapon = weapon;
-        Lives = lives;
-        MaxLives = lives;
+        LivedHandler = new LivedHandler(this, lives);
         CharShotSpeed = charShotSpeed;
         CharShotDuration = charShotDuration;
-        UpdateHealthBar();
+
     }
 
     protected override void SetupItem()
@@ -66,58 +90,37 @@ public abstract class Character : Movable
         {
             this.Weapon.SetupWeapon();
         }
-        AddHealthBar();
-        UpdateHealthBar();
         base.SetupItem();
     }
     public override void OnCollisionEnter(Item collider)
     {
         base.OnCollisionEnter(collider);
-        // if (collider is Shot s && s.) { }
     }
 
-    public void ChangeLives(float change)
-    {
-        this.Lives += change;
-        if (Lives > MaxLives)
-        {
-            Lives = MaxLives;
-        }
-        if (Lives <= 0)
-        {
-            Lives = 0;
-            Death();
-        }
-        UpdateHealthBar();
-    }
+
+
+
 
     public virtual void UpdateHealthBar()
     {
-        if (MaxLives != 0)
-        {
-            damagebar.SetPositions(new Vector3[2] { new Vector3(fillBar.GetPosition(0).x + (fillBar.GetPosition(1).x- fillBar.GetPosition(0).x) * Lives / MaxLives, fillBar.GetPosition(1).y, 0), new Vector3(fillBar.GetPosition(1).x, fillBar.GetPosition(1).y, 0) });
-        }
+        HealthBar.UpdateHealthBar(LivedHandler);
     }
     /// <summary>
     /// What should happen when lives are at zero
     /// </summary>
-    public virtual void Death()
+    public virtual bool Death()
     {
-        this.Dispose();
+        if (alreadyDied == false)
+        {
+            this.Dispose();
+            alreadyDied = true;
+            return false;
+        }
+        return true;
     }
     public virtual void AddHealthBar()
     {
-        var bar = UnityEngine.Object.Instantiate(GameObjects.healthBarStandard);
-        bar.transform.parent = this.Prefab.transform;
-        bar.transform.position = new Vector3(0, 0, Prefab.transform.position.z);
-        bar.transform.localPosition = new Vector3(0, 0, 0);
-        fillBar = bar.transform.GetChild(1).GetComponent<LineRenderer>();
-        fillBar.transform.position = new Vector3(0, 0, Prefab.transform.position.z + 0.5f);
-        fillBar.transform.localPosition = new Vector3(0, 0, 0.5f);
-
-        damagebar = bar.transform.GetChild(0).GetComponent<LineRenderer>();
-        damagebar.transform.position = new Vector3(0, 0, Prefab.transform.position.z + 0.5f);
-        damagebar.transform.localPosition = new Vector3(0, 0, 0.6f);
+        HealthBar.AddHealthBar(this.Prefab);
     }
 }
 

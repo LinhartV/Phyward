@@ -38,6 +38,7 @@ public class Exit : Item
     protected override void SetupItem()
     {
         base.SetupItem();
+        this.rb.constraints = RigidbodyConstraints2D.FreezeAll;
     }
 }
 

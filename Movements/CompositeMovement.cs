@@ -87,5 +87,14 @@ public class CompositeMovement : IMovement
             partialMovements[name].UpdateMovement();
         }
     }
+    public override void ResetMovementSpeed(float speed)
+    {
+        base.ResetMovementSpeed(speed);
+        thisMovement.ResetMovementSpeed(speed);
+        foreach (var movement in partialMovements.Values)
+        {
+            movement.ResetMovementSpeed(speed);
+        }
+    }
 }
 

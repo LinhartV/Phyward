@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using static UnityEditor.Progress;
 
 public class UIItem : ActionHandler
 {
@@ -118,25 +117,26 @@ public class UIItem : ActionHandler
     {
         if (transitions.ContainsKey(name))
         {
-            if (!runningTransitions.ContainsKey(name) /*&& ((!transitions[name].CanBeReturned() && onlyIfEnded) || !onlyIfEnded)*/)
+            if (!runningTransitions.ContainsKey(name))
+            {
+                if (!transitions[name].IsForwardComplete())
+                {
+                    transitions[name].Start();
+                    runningTransitions.Add(name, transitions[name]);
+                    if (!ToolsUI.transitables.Contains(this))
+                        ToolsUI.transitables.Add(this);
+                }
+            }
+            /*else
             {
                 transitions[name].Start();
-                runningTransitions.Add(name, transitions[name]);
-            }
-            else if (!onlyIfEnded)
-            {
-                transitions[name].Start();
-            }
-            if (!ToolsUI.transitables.Contains(this))
-            {
-                ToolsUI.transitables.Add(this);
-            }
+            }*/
         }
     }
-    public void ReturnTransition(string name)
+    public void ReturnTransition(string name = "")
     {
         //if transition can be returned, than return it
-        if (transitions.ContainsKey(name) && (runningTransitions.ContainsKey(name) || transitions[name].CanBeReturned()))
+        if (transitions.ContainsKey(name) && (runningTransitions.ContainsKey(name) || transitions[name].IsForwardComplete()))
         {
             transitions[name].Return();
             if (!runningTransitions.ContainsKey(name))
@@ -157,6 +157,10 @@ public class UIItem : ActionHandler
             transitable.Initialize();
             transitions.Add(name, transitable);
         }
+        else
+        {
+            transitions[name] = transitable;
+        }
     }
     public void AddAnimation(Transitable animation, Transitable beginTransition = null, string name = "")
     {
@@ -164,7 +168,7 @@ public class UIItem : ActionHandler
         {
             AddTransition(animation, name + "animation");
         }
-        animation.onAnimationEnd = () =>
+        animation.onForwardEnd = () =>
         {
             ReturnTransition(name + "animation");
         };
@@ -177,7 +181,7 @@ public class UIItem : ActionHandler
         {
             AddTransition(beginTransition, name + "beginAnimation");
             StartTransition(name + "beginAnimation");
-            beginTransition.onAnimationEnd = () =>
+            beginTransition.onForwardEnd = () =>
             {
                 StartTransition(name + "animation");
             };
@@ -253,9 +257,9 @@ public class UIItem : ActionHandler
             }
             else
             {
-                if (transitions[name].onAnimationEnd != null)
+                if (transitions[name].onForwardEnd != null)
                 {
-                    transitions[name].onAnimationEnd();
+                    transitions[name].onForwardEnd();
                 }
             }
         }
@@ -267,4 +271,10 @@ public class UIItem : ActionHandler
         }
 
     }
+    /// <summary>
+    /// Gets transition for changing it's properties - only with caution.
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public Transitable GetTransitable(string name) { return transitions.ContainsKey(name) ? transitions[name] : null; }
 }

@@ -79,10 +79,14 @@ public class AcceleratedMovement : IMovement
             }
         }
     }
+    public override void ResetMovementSpeed(float speed)
+    {
+        baseSpeed = speed;
+    }
     /// <summary>
     /// Sets current movement Speed and if it's higher than max Speed, it updates max Speed as well
     /// </summary>
-    public override void ResetMovementSpeed(float speed)
+    public void ResetRealMovementSpeed(float speed)
     {
         MovementSpeed = speed;
         if (baseSpeed < speed)

@@ -8,8 +8,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using static ToolsSystem;
-using static UnityEditor.PlayerSettings;
-using static UnityEditor.Progress;
 
 public abstract class Item : ActionHandler
 {
@@ -139,6 +137,12 @@ public abstract class Item : ActionHandler
         Prefab.GetComponent<Collider2D>().isTrigger = !IsSolid;
         ItemScript script = Prefab.AddComponent<ItemScript>();
         script.item = this;
+        if (this is ILived l)
+        {
+            l.HealthBar = new StandardHealthBar();
+            l.AddHealthBar();
+        }
+        rb.constraints = RigidbodyConstraints2D.FreezeAll;
     }
     public override void InnerDispose()
     {
@@ -168,7 +172,11 @@ public abstract class Item : ActionHandler
                 GCon.lastInteractable = i;
             }
         }
-        
+        if (collider is Shot s && this is ILived l && ((this is Character ch && s.Character.IsFriendly != ch.IsFriendly) || this is not Character))
+        {
+            l.LivedHandler.ReceiveDamage(s.DealDamage());
+        }
+
     }
     public virtual void OnCollisionLeave(Item collider)
     {
@@ -192,6 +200,8 @@ public abstract class Item : ActionHandler
         }
         if (DeleteOnLeave)
         {
+            if (GCon.game.CurLevel.Items.ContainsKey(Id))
+                GCon.game.CurLevel.Items.Remove(this.Id);
             Dispose();
         }
     }

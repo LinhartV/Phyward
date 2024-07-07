@@ -16,8 +16,6 @@ using Newtonsoft.Json.Linq;
 
 public static class ToolsSystem
 {
-
-
     /// <summary>
     /// When the key is active
     /// </summary>
@@ -30,7 +28,10 @@ public static class ToolsSystem
         ///<summary>This keyaction can be triggered while animation is being played</summary>
         Animation,
         ///<summary>This keyaction can be triggered in main menu</summary>
-        Menu
+        Menu,
+        ///<summary>This keyaction can be triggered in main menu</summary>
+        All
+
     };
 
     public static JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings()
@@ -77,9 +78,6 @@ public static class ToolsSystem
             //TODO mazat při nahrání jiné hry
             GCon.game.ActivateThisGame();
             ToolsGame.CreateGame();
-
-            //ToolsSystem.SaveGame(games[playerName]);
-
             return true;
         }
         else
@@ -134,7 +132,6 @@ public static class ToolsSystem
         try
         {
             game = JsonConvert.DeserializeObject<GameControl>(jsonString, jsonSerializerSettings);
-            //GCon.game.Player.AssignPrefab();
             ToolsUI.SetupUI();
             ToolsUI.LoadUI();
             foreach (var item in game.Items.Values)
@@ -149,8 +146,7 @@ public static class ToolsSystem
             {
                 item.AssignPrefab();
             }
-
-            //game = JsonUtility.FromJson<GameControl>(jsonString);
+            ToolsGame.AddBioms();
             return true;
         }
         catch (Exception e)
@@ -166,6 +162,12 @@ public static class ToolsSystem
         game = null;
         return false;
 #endif
+    }
+
+    public static void DeleteSaveFile(string playerName)
+    {
+        string destination = "./SavedGames/" + playerName + ".json";
+        File.Delete(destination);
     }
 
     public static bool ScrambledEquals(List<PreUnit> list1, List<PreUnit> list2)

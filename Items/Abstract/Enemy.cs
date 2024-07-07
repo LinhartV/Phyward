@@ -13,24 +13,31 @@ public abstract class Enemy : Character
     [JsonProperty]
     private IIdleMovementAI idleMovement;
     public float Coef { get; set; }
+    public bool IsMinion { get; set; } = false;
+    [JsonIgnore]
+    protected List<ToolsPhyward.Drop> dropList = new List<ToolsPhyward.Drop>();
     public Enemy() { }
 
-    public Enemy(float coef,float bodyDamage, IIdleMovementAI idleMovement, Vector2 pos, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, bool isSolid = true
-        , Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, null, 1, 1, 1, 1, lives, prefab, false, isSolid, map)
+    public Enemy(float coef, float bodyDamage, IIdleMovementAI idleMovement, Vector2 pos, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, bool isSolid = true
+        , Armor armor = null, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, null, 1, 1, 1, 1, lives * coef, prefab, false, isSolid, armor, map)
     {
         Constructor(bodyDamage, idleMovement, coef);
     }
 
-    public Enemy(float coef, float bodyDamage, IIdleMovementAI idleMovement, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, bool isSolid = true) : base(baseSpeed, acceleration, friction, null, 1, 1, 1, 1, lives, prefab, false, isSolid)
+    public Enemy(float coef, float bodyDamage, IIdleMovementAI idleMovement, float baseSpeed, float acceleration, float friction, float lives, GameObject prefab, Armor armor = null, bool isSolid = true) : base(baseSpeed, acceleration, friction, null, 1, 1, 1, 1, lives * coef, prefab, false, isSolid, armor)
     {
         Constructor(bodyDamage, idleMovement, coef);
     }
     public void Constructor(float bodyDamage, IIdleMovementAI idleMovement, float coef)
     {
-        this.Coef = coef;
-        this.BodyDamage = bodyDamage;
+        SetAngle = true;
+        this.Coef = coef * GCon.game.Coef;
+        this.BodyDamage = bodyDamage * Coef;
         this.idleMovement = idleMovement;
-        this.StartIdleMovement();
+        if (idleMovement != null)
+        {
+            this.StartIdleMovement();
+        }
     }
 
     protected override void SetupItem()
@@ -60,7 +67,13 @@ public abstract class Enemy : Character
         colObj.layer = LayerMask.NameToLayer("PlayerLayer");
     }
 
-    public abstract void Drop();
+    public void Drop()
+    {
+        if (dropList.Count != 0)
+        {
+            ToolsPhyward.DropDrops(dropList, this.Prefab.transform.position);
+        }
+    }
 
     public override void InnerDispose()
     {
@@ -68,25 +81,32 @@ public abstract class Enemy : Character
     }
     public void StartIdleMovement()
     {
-        this.idleMovement.StartIdleMovement(this);
+        if (idleMovement != null)
+        {
+            this.idleMovement.StartIdleMovement(this);
+        }
     }
     public void StopIdleMovement()
     {
-        this.idleMovement.StopIdleMovement(this);
+        if (idleMovement != null)
+        {
+            this.idleMovement.StopIdleMovement(this);
+        }
     }
-    public override void Death()
+    public override bool Death()
     {
-        Drop();
-        base.Death();
+        if (!base.Death())
+        {
+            Drop();
+            return false;
+        }
+        return true;
     }
 
     public override void OnCollisionEnter(Item collider)
     {
         base.OnCollisionEnter(collider);
-        if (collider is Shot s && s.Character.IsFriendly)
-        {
-            this.ChangeLives(-s.DealDamage());
-        }
+
     }
 
 }

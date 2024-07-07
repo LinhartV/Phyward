@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static UnityEditor.Progress;
 using Unity.VisualScripting;
 
 /// <summary>
@@ -39,7 +38,6 @@ public class RegisteredKey
                 {
                     ToolsGame.actions[playerAction].Item1();
                 }
-
             }
         };
         this.KeyUp = () =>

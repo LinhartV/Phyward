@@ -6,7 +6,6 @@ using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using static ToolsGame;
-using static UnityEditor.Progress;
 
 /// <summary>
 /// Just what it says...
@@ -89,58 +88,122 @@ public class UnityControl : MonoBehaviour
     public GameObject craftingScroll;
     [SerializeField]
     public GameObject medkit;
+    [SerializeField]
+    public GameObject basicArmor;
+    [SerializeField]
+    public GameObject block;
+    [SerializeField]
+    public GameObject blackShot;
+    [SerializeField]
+    public GameObject blowgunShot;
+    [SerializeField]
+    public GameObject boss1;
+    [SerializeField]
+    public GameObject shootingEnemy;
+    [SerializeField]
+    public GameObject pebble;
+    [SerializeField]
+    public GameObject justBlock;
+    [SerializeField]
+    public GameObject bandage;
+    [SerializeField]
+    public GameObject boss2;
+    [SerializeField]
+    public GameObject swarmEnemy;
+    [SerializeField]
+    public GameObject density;
+    [SerializeField]
+    public GameObject acceleration;
+    [SerializeField]
+    public GameObject force;
+    [SerializeField]
+    public GameObject leatherArmor;
+    [SerializeField]
+    public GameObject fastReload;
+    [SerializeField]
+    public GameObject speedUp;
+    [SerializeField]
+    GameObject finalBoss;
+    [SerializeField]
+    GameObject acceleratedHealing;
+    [SerializeField]
+    GameObject portal;
+
+    [SerializeField]
+    AudioClip clip1;
+    [SerializeField]
+    AudioClip clip2;
+    [SerializeField]
+    AudioClip clip3;
+    [SerializeField]
+    AudioSource audioSource;
+    private List<AudioClip> clips;
+    private List<AudioClip> remainingClips;
+
+    private bool frameEnded;
 
     // Start is called before the first frame update
     void Start()
     {
 
         ToolsUI.holdCursor = holdCursor; ToolsUI.selectCursor = selectCursor; ToolsUI.normalCursor = normalCursor; ToolsUI.aimCursor = aimCursor;
-        GameObjects.SetPrefabs(medkit,craftingScroll, inertia, volume, area, scroll, burningRock, crumblingRock, craftable, baseHouse, sling, blowgun, slingshot, counter, unitAnimation, slot, speed, frequency, mass, length, redSmallEnemy, healthBarStandard, purpleEnemy, time, redSmallShot, fireSwarmShot, exit, empty, player, blueShot, solidMap);
+        GameObjects.SetPrefabs(portal, finalBoss, acceleratedHealing, fastReload, speedUp, leatherArmor, force, acceleration, density, swarmEnemy, boss2, bandage, justBlock, pebble, blackShot, blowgunShot, boss1, shootingEnemy, block, basicArmor, medkit, craftingScroll, inertia, volume, area, scroll, burningRock, crumblingRock, craftable, baseHouse, sling, blowgun, slingshot, counter, unitAnimation, slot, speed, frequency, mass, length, redSmallEnemy, healthBarStandard, purpleEnemy, time, redSmallShot, fireSwarmShot, exit, empty, player, blueShot, solidMap, wallTile);
         ToolsUI.SetCursor(aimCursor);
         ToolsGame.SetupGame();
-        ToolsSystem.StartGame("Try");
-        BuildLevel(GCon.game.CurLevel, null, GCon.game.Player.Prefab.transform.position);
+        ToolsSystem.StartGame("Game");
         var camera = GameObject.FindGameObjectWithTag("MainCamera");
         camera.GetComponent<CameraFollow>().target = GCon.game.Player.Prefab.transform;
         GCon.GameStarted = true;
         GCon.game.Player.Prefab.SetActive(true);
         OnResize();
+        frameEnded = true;
+        clips = new List<AudioClip>() { clip1, clip2, clip3 };
+        remainingClips = new List<AudioClip>(clips);
+        audioSource = GameObject.Instantiate(audioSource);
     }
 
     private void Update()
     {
         KeyPress();
         KeyRelease();
+        AudioHandling();
         //OnResize();
     }
     private void FixedUpdate()
     {
-        if (GCon.GameStarted)
+        if (frameEnded)
         {
-            List<ActionHandler> temp = new List<ActionHandler>(GCon.gameSystems[GCon.GetPausedType()].itemStep);
-            foreach (ActionHandler item in temp)
+            frameEnded = false;
+            if (GCon.GameStarted)
             {
-                item.ExecuteActions(GCon.gameSystems[GCon.GetPausedType()].NowDifference);
-            }
-            List<ActionHandler> tempDestroyed = new List<ActionHandler>(GCon.game.ItemsToBeDestroyed);
-            foreach (var item in tempDestroyed)
-            {
-                item.InnerDispose();
-            }
-            GCon.game.ItemsToBeDestroyed.Clear();
-            List<Item> tempInactive = new List<Item>(GCon.game.ItemsToBeSetInactive);
-            foreach (var item in tempInactive)
-            {
-                if (item.IsTriggered == false)
+                List<ActionHandler> temp = new List<ActionHandler>(GCon.gameSystems[GCon.GetPausedType()].itemStep);
+                foreach (ActionHandler item in temp)
                 {
-                    item.Prefab.SetActive(false);
-                    GCon.game.ItemsToBeSetInactive.Remove(item);
+                    item.ExecuteActions(GCon.gameSystems[GCon.GetPausedType()].NowDifference);
                 }
+                List<ActionHandler> tempDestroyed = new List<ActionHandler>(GCon.game.ItemsToBeDestroyed);
+                foreach (var item in tempDestroyed)
+                {
+                    item.InnerDispose();
+                }
+                GCon.game.ItemsToBeDestroyed.Clear();
+                List<Item> tempInactive = new List<Item>(GCon.game.ItemsToBeSetInactive);
+                foreach (var item in tempInactive)
+                {
+                    if (item.IsTriggered == false)
+                    {
+                        item.Prefab.SetActive(false);
+                        GCon.game.ItemsToBeSetInactive.Remove(item);
+                    }
+                }
+                ToolsUI.TransitionTransitables(Time.deltaTime);
+                GCon.game.Now++;
+                GCon.gameSystems[GCon.GetPausedType()].NowDifference++;
             }
-            ToolsUI.TransitionTransitables(Time.deltaTime);
-            GCon.game.Now++;
-            GCon.gameSystems[GCon.GetPausedType()].NowDifference++;
+            frameEnded = true;
         }
+        else
+            Debug.Log("Frame execution out of order caught");
 
     }
     float prevWidth = 0;
@@ -151,6 +214,22 @@ public class UnityControl : MonoBehaviour
         {
             ToolsUI.OnResize();
         }
+    }
+
+    private void AudioHandling()
+    {
+        if (!audioSource.isPlaying)
+        {
+            if (remainingClips.Count == 0)
+            {
+                remainingClips = new List<AudioClip>(clips);
+            }
+            int i = ToolsGame.Rng(0, remainingClips.Count);
+            audioSource.clip = remainingClips[i];
+            remainingClips.RemoveAt(i);
+            audioSource.Play();
+        }
+
     }
 
     void OnApplicationQuit()
@@ -186,57 +265,6 @@ public class UnityControl : MonoBehaviour
                 KeyController.SetPressedStateToOtherSameKeys(key.Key, false);
             }
         }
-    }
-
-    public void BuildLevel(Level level, Level prevLevel, Vector2 playerPos)
-    {
-        if (level == null)
-        {
-            return;
-        }
-        solidMap.ClearAllTiles();
-        MazeTile[,] maze = level.Maze;
-
-        for (int i = 0; i < maze.GetLength(0); i++)
-        {
-            for (int j = 0; j < maze.GetLength(1); j++)
-            {
-                switch (maze[i, j])
-                {
-                    case MazeTile.empty:
-
-                        break;
-                    case MazeTile.block:
-                        InsertTile(wallTile, solidMap, j, i);
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-        if (prevLevel != null)
-        {
-            var temp = new List<Item>(prevLevel.Items.Values);
-            foreach (var obj in temp)
-            {
-                obj.OnLevelLeave();
-                if (!obj.IsInLevel)
-                {
-                    GCon.game.ItemsToBeSetInactive.Add(obj);
-                }
-            }
-        }
-        foreach (var obj in level.Items.Values)
-        {
-            obj.Prefab.SetActive(true);
-            obj.OnLevelEnter();
-        }
-        GCon.game.Player.Prefab.transform.position = new Vector3(playerPos.x, playerPos.y, GCon.game.Player.Prefab.transform.position.z);
-    }
-    private void InsertTile(TileBase tile, Tilemap map, int x, int y)
-    {
-        var tilePosition = solidMap.WorldToCell(new Vector3(x, y));
-        map.SetTile(tilePosition, tile);
     }
 
 }

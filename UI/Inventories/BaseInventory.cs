@@ -27,7 +27,8 @@ public class BaseInventory : Inventory
     public UIItem baseInventory;
     private ToolsUI.FilterType craftingFilter;
     private ButtonTemplate[] craftingFilters = new ButtonTemplate[4];
-    private UIItem unitCraftButton;
+    private ButtonTemplate unitCraftButton;
+    private ButtonTemplate upgradeButton;
     public SlotTemplate binSlot;
     public ButtonTemplate[] filterButtons = new ButtonTemplate[4];
 
@@ -200,7 +201,6 @@ public class BaseInventory : Inventory
         baseInventory.Go.SetActive(true);
         baseInventory.Go.transform.position = new Vector3(0, baseInventory.Go.transform.position.y);
         scrollbarCrafting = GameObject.Find("ScrollbarCrafting");
-
         SetupInventorySlots();
         SetupPresetSlots();
         SetupCraftingButtons();
@@ -214,7 +214,7 @@ public class BaseInventory : Inventory
     }
     private void SetupPresetSlots()
     {
-        binSlot = new SlotTemplate(GameObject.FindGameObjectWithTag("BinBase"), true, false, true, (SlotTemplate slotable) => { return true; }, (SlotTemplate slot) =>
+        binSlot = new SlotTemplate(GameObject.FindGameObjectWithTag("BinBase"), true, false, true, (SlotTemplate slotable) => { return GCon.game.TutorialPhase > 4 && GCon.game.TutorialPhase != 6; }, (SlotTemplate slot) =>
         {
             if (ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot))
             {
@@ -239,12 +239,34 @@ public class BaseInventory : Inventory
             SetupInventorySlots();
         };
         craftingSpace = new UIItem(GameObject.FindGameObjectWithTag("CraftingSpace"));
-        unitCraftButton = new ButtonTemplate(GameObject.FindGameObjectWithTag("UnitCraftButton"), true, false);
-        unitCraftButton.OnMouseDown = (UIItem item) =>
-        {
-            ToolsUI.unitCraftInventory.OpenInventory();
-        };
+        unitCraftButton = new ButtonTemplate(GameObject.FindGameObjectWithTag("UnitCraftButton"), false, false);
+        upgradeButton = new ButtonTemplate(GameObject.Find("UpgradeButton"), false, false);
+        CheckActivationOfCraftButtons();
     }
+    public void CheckActivationOfCraftButtons()
+    {
+        if (GCon.game.TutorialPhase > 5)
+        {
+            unitCraftButton.OnMouseDown = (UIItem item) =>
+            {
+                ToolsUI.unitCraftInventory.OpenInventory();
+            };
+            unitCraftButton.Hoverable = true;
+            unitCraftButton.Go.GetComponent<Image>().color = new Color(0.71f, 0.79f, 0.9f);
+            unitCraftButton.Go.transform.GetChild(0).GetComponent<Image>().color = new Color(1, 1, 1);
+        }
+        if (GCon.game.TutorialPhase > 20)
+        {
+            upgradeButton.OnMouseDown = (UIItem item) =>
+            {
+                ToolsUI.unitCraftInventory.OpenInventory();
+            };
+            upgradeButton.Hoverable = true;
+            upgradeButton.Go.GetComponent<Image>().color = new Color(0.93f, 0.91f, 0.655f);
+            upgradeButton.Go.transform.GetChild(0).GetComponent<Image>().color = new Color(1, 1, 1);
+        }
+    }
+
     private void SetupCraftingButtons()
     {
         for (int i = 0; i < 4; i++)
@@ -260,7 +282,7 @@ public class BaseInventory : Inventory
                 ButtonTemplate b = item as ButtonTemplate;
                 if (b.Go.name == "All")
                     craftingFilter = ToolsUI.FilterType.all;
-                if (b.Go.name == "Armor")
+                if (b.Go.name == "CraftedArmor")
                     craftingFilter = ToolsUI.FilterType.armor;
                 if (b.Go.name == "Weapons")
                     craftingFilter = ToolsUI.FilterType.weapons;
@@ -325,7 +347,9 @@ public class BaseInventory : Inventory
                 unit.transform.SetParent(craftable.transform.GetChild(1).GetChild(0));
                 unit.transform.localPosition = new Vector3(j * 95, 0);
                 unit.transform.localScale = new Vector3(1, 1, 1);
-                unit.transform.GetChild(0).localScale = new Vector3(90, 90, 90);
+                //unit.transform.GetChild(0).localScale = new Vector3(90 * GameObjects.GetPrefabByName(craftableItem.NeededMaterials[j].Item1.Prefab.name).transform.GetChild(0).localScale.x, 90 * GameObjects.GetPrefabByName(craftableItem.NeededMaterials[j].Item1.Prefab.name).transform.GetChild(0).localScale.y, 1);
+
+                unit.transform.GetChild(0).localScale = new Vector3(90 * unit.transform.GetChild(0).localScale.x, 90* unit.transform.GetChild(0).localScale.y, 90);
                 var textPrefab = GameObject.Instantiate(GameObjects.text);
                 var text = textPrefab.GetComponent<TMPro.TextMeshProUGUI>();
                 text.text = GCon.game.Player.PlayerControl.unitCount[craftableItem.NeededMaterials[j].Item1.Name].ToString() + "/" + craftableItem.NeededMaterials[j].Item2.ToString();

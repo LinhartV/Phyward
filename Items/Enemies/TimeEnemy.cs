@@ -18,20 +18,21 @@ public class TimeEnemy : Enemy
     {
     }
     /// <param name="coef">Boost of certain parameters - larger number means harder enemy</param>
-    public TimeEnemy(float coef) : base(coef, 0.5f, new ToAndFroIdleMovement(), 7, 3, 0.5f, 40, GameObjects.redSmallEnemy)
+    public TimeEnemy(float coef, List<ToolsPhyward.Drop> l = null) : base(coef, 0.5f, new ToAndFroIdleMovement(), 7, 3, 0.5f, 40, GameObjects.redSmallEnemy)
     {
+        if (l == null)
+        {
+            dropList = new List<ToolsPhyward.Drop>
+            {
+                new ToolsPhyward.Drop(1, 1, 1, () => { return new Unit(Units.Time()); })
+            };
+        }
+        else dropList = l;
         SetAngle = true;
         AddAction(new ItemAction("checkDistanceTimeEnemy", 1));
     }
 
-    public override void Drop()
-    {
-        List<ToolsPhyward.Drop> l = new List<ToolsPhyward.Drop>
-        {
-            new ToolsPhyward.Drop(1, 1, 1, () => { return new Unit(Units.Time()); })
-        };
-        ToolsPhyward.DropDrops(l, this.Prefab.transform.position);
-    }
+
     [JsonIgnore]
     private static bool staticCalled = false;
     protected override void SetupItem()
@@ -49,7 +50,7 @@ public class TimeEnemy : Enemy
                     en.AddAction(new ItemAction("sprintTowardsPlayer", 1));
                     en.AddControlledMovement(new RealAcceleratedMovement(1 * en.Coef, ToolsMath.GetAngleFromLengts(GCon.game.Player, en), en.Acceleration * 2 * en.Coef, 5 * en.Coef), "sprint");
                     en.DeleteAction("checkDistanceTimeEnemy");
-                    en.AddAction(new ItemAction("death", ToolsMath.SecondsToFrames(ToolsGame.Rng(4, 8) * en.Coef), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.Freeze));
+                    en.AddAction(new ItemAction("receiveDamage", 1, ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.Freeze, null, 0.05 * (1.6f - en.Coef)));
                 }
             });
             lambdaActions.Add("sprintTowardsPlayer", (item, parameter) =>

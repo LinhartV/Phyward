@@ -4,12 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class WrapPanel : UIItem
 {
     public LoadingSlotTemplate qBonusSlot;
     public LoadingSlotTemplate eBonusSlot;
     public SlotTemplate weaponSlot;
+    public SlotTemplate armorSlot;
     public TickButtonTemplate autoPickup;
     private float inventoryDownY = -940;
     private float inventoryUpY = 0;
@@ -110,6 +112,7 @@ public class WrapPanel : UIItem
             return accepted;
         }, (SlotTemplate slot) =>
         {
+            weaponSlot.ChangePlaceHolderImage(null);
             GCon.game.Player.Weapon = (slot.SlotableRef as CraftedWeapon).Weapon;
             GCon.game.Player.PlayerControl.WeaponSlotRef = (slot.SlotableRef as CraftedWeapon);
             if (ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot))
@@ -118,9 +121,38 @@ public class WrapPanel : UIItem
                 GCon.game.Player.PlayerControl.RemoveFromBase(ToolsUI.draggedSlot.SlotableRef);
                 ToolsUI.ActiveInventory.UpdateInventory();
             }
-        }, (SlotTemplate slot) => { GCon.game.Player.Weapon = null; }, true);
+        }, (SlotTemplate slot) =>
+        {
+            GCon.game.Player.Weapon = null;
+            weaponSlot.ChangePlaceHolderImage(GameObjects.sling.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite);
+        }, true);
+        weaponSlot.ChangePlaceHolderImage(GameObjects.sling.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite);
 
-
+        armorSlot = new SlotTemplate(GameObject.Find("ArmorSlot"), false, false, false, (SlotTemplate slotable) =>
+        {
+            bool accepted = ToolsUI.draggedSlot.SlotableRef is CraftedArmor;
+            if (accepted && ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot) && GCon.game.Player.PlayerControl.backpack.Count >= GCon.game.Player.PlayerControl.SlotSpace)
+            {
+                accepted = false;
+            }
+            return accepted;
+        }, (SlotTemplate slot) =>
+        {
+            armorSlot.ChangePlaceHolderImage(null);
+            GCon.game.Player.Armor = (slot.SlotableRef as CraftedArmor).Armor;
+            GCon.game.Player.PlayerControl.ArmorSlotRef = (slot.SlotableRef as CraftedArmor);
+            if (ToolsUI.baseInventory.baseSlots.Contains(ToolsUI.draggedSlot))
+            {
+                GCon.game.Player.PlayerControl.backpack.Add(ToolsUI.draggedSlot.SlotableRef);
+                GCon.game.Player.PlayerControl.RemoveFromBase(ToolsUI.draggedSlot.SlotableRef);
+                ToolsUI.ActiveInventory.UpdateInventory();
+            }
+        }, (SlotTemplate slot) =>
+        {
+            GCon.game.Player.Armor = null;
+            armorSlot.ChangePlaceHolderImage(GameObjects.basicArmor.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite);
+        }, true);
+        armorSlot.ChangePlaceHolderImage(GameObjects.basicArmor.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite);
 
         eBonusSlot.ChangePlaceHolder("E");
         qBonusSlot.ChangePlaceHolder("Q");
@@ -134,6 +166,10 @@ public class WrapPanel : UIItem
         if (GCon.game.Player.PlayerControl.WeaponSlotRef != null)
         {
             weaponSlot.AddSlotable(GCon.game.Player.PlayerControl.WeaponSlotRef);
+        }
+        if (GCon.game.Player.PlayerControl.ArmorSlotRef != null)
+        {
+            armorSlot.AddSlotable(GCon.game.Player.PlayerControl.ArmorSlotRef);
         }
         if (GCon.game.Player.PlayerControl.QBonusRef != null)
         {

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using static UnityEditor.Progress;
 
 /// <summary>
 /// Class for controling player stats (not player as ingame character, but player as current game session)
@@ -23,6 +22,8 @@ public class PlayerControl
     }
     [JsonProperty]
     public CraftedWeapon WeaponSlotRef;
+    [JsonProperty]
+    public CraftedArmor ArmorSlotRef;
     [JsonProperty]
     public Edible QBonusRef;
     [JsonProperty]
@@ -198,6 +199,10 @@ public class PlayerControl
         {
             ToolsUI.wrapPanel.eBonusSlot.RemoveSlotable();
         }
+        if (ToolsUI.wrapPanel.armorSlot.SlotableRef == slotable)
+        {
+            ToolsUI.wrapPanel.armorSlot.RemoveSlotable();
+        }
         backpack.Remove(slotable);
     }
     public void PickupCollectable(Collectable col)
@@ -218,9 +223,9 @@ public class PlayerControl
         }
         else if (backpack.Count < SlotSpace)
         {
+            backpack.Add(col.SlotableRef as Slotable);
             ToolsUI.AnimateSettingSlotable(1f, new Vector2(0, -250), col.Prefab, () =>
             {
-                backpack.Add(col.SlotableRef as Slotable);
                 ToolsUI.ActiveInventory.UpdateInventory();
             }, false);
             col.Dispose();

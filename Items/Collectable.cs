@@ -32,11 +32,15 @@ public class Collectable : Item, IInteractable
         base.OnCollisionEnter(collider);
         if (!GCon.GameStarted)
             return;
-
     }
 
     protected override void SetupItem()
     {
+        Collider2D col;
+        if(!Prefab.TryGetComponent<Collider2D>(out col))
+        {
+            col = Prefab.AddComponent<CircleCollider2D>();
+        }
         base.SetupItem();
         if (SlotableRef!=null)
         {

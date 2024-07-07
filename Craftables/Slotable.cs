@@ -17,7 +17,7 @@ public abstract class Slotable : ICollectableRef, IComparable<Slotable>
 
     [JsonProperty]
     public ToolsUI.FilterType filter { get; private set; }
-    public string Description { get; private set; }
+    public string Description { get; protected set; }
     /// <summary>
     /// Primary key for identification - also displayed name
     /// </summary>

@@ -8,21 +8,24 @@ using UnityEngine.UI;
 
 public class Scroll : IUnslotable
 {
-    private PreUnit unit;
-    public Scroll(PreUnit unit) : base(GameObjects.scroll)
+    public PreUnit Unit { get; private set; }
+    public Action OnClose { get; private set; }
+    public Scroll(PreUnit unit, Action onClose = null) : base(GameObjects.scroll)
     {
-        this.unit = unit;
+        this.Unit = unit;
+        this.OnClose = onClose;
     }
 
     public override void ActionWhenCollected()
     {
-        GCon.game.Player.PlayerControl.DiscoverNewUnit(unit);
-        ToolsUI.TriggerScrollPanel(unit);
+        GCon.game.Player.PlayerControl.DiscoverNewUnit(Unit);
+        GCon.game.CurBiom.ScrollsCollected++;
+        ToolsUI.TriggerScrollPanel(this);
     }
-   
+
     public override ICollectableRef DeepClone()
     {
-        return new Scroll(unit);
+        return new Scroll(Unit, OnClose);
     }
 }
 

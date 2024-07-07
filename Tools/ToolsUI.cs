@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEditor.Progress;
 
 public static class ToolsUI
 {
@@ -55,6 +54,11 @@ public static class ToolsUI
     public static AnimationCurve easeOut = new AnimationCurve(new Keyframe(0, 0, 2, 2), new Keyframe(1, 1, 0, 0));
     public static UIItem descriptionPanel;
     public static UIItem scrollPanel;
+    public static UIItem transitionPanel;
+    public static UIItem deathPanel;
+    public static UIItem menuPanel;
+    public static UIItem endPanel;
+    public static UIItem victoryPanel;
     /// <summary>
     /// Literally all baseSlots on scene
     /// </summary>
@@ -125,7 +129,15 @@ public static class ToolsUI
         }
         else if (!closing)
         {
-            activeInventory.OpenInventory();
+            if (GCon.game.TutorialPhase != 0)
+            {
+                activeInventory.OpenInventory();
+            }
+            if (GCon.game.TutorialPhase == 1)
+            {
+                GCon.game.TutorialPhase = 2;
+                Tutorial.ShowTutorial(new Tutorial.TutorialBlock("Inventář", "Vše, co máš u sebe", "Pokud vlastníš zbraň, přetáhni ji nahoru do kolonky pro zbraň. Pokud najedeš na položku, zobrazí se její popis."));
+            }
         }
     }
 
@@ -141,6 +153,11 @@ public static class ToolsUI
         if (ToolsUI.DraggedSlot != null && draggedSlotBeingReturnedFromUnsuccessfulDrag == false)
         {
             ToolsUI.DraggedSlot.StopDragging();
+            if (GCon.game.TutorialPhase == 2 && ToolsUI.hoveredWhileDragging == wrapPanel.weaponSlot)
+            {
+                Tutorial.ShowTutorial(new Tutorial.TutorialBlock("Ozbrojen!", "Uvidíme, jestli se dovedeš bránit", "Míříš pomocí kurzoru myši. Nyní zavři základnu pomocí Esc."));
+                GCon.game.TutorialPhase = 3;
+            }
             hoveredWhileDragging = null;
             ResetDropables();
         }
@@ -200,24 +217,35 @@ public static class ToolsUI
         baseInventory = new BaseInventory(new UIItem(GameObject.FindGameObjectWithTag("BaseInventory")));
         unitCraftInventory = new UnitCraftInventory(new UIItem(GameObject.FindGameObjectWithTag("UnitCraft")));
         descriptionPanel = new UIItem(GameObject.FindGameObjectWithTag("DescriptionPanel"));
-        scrollPanel = new UIItem(GameObject.FindGameObjectWithTag("ScrollPanel"));
-        scrollPanel.Go.GetComponent<CanvasGroup>().alpha = 0;
-        scrollPanel.AddTransition(new Transparentable(0.5f, 1, null, false, () =>
-        {
-            GCon.game.gameActionHandler.AddAction(new ItemAction((ActionHandler item, object[] parameters) => { scrollPanel.ReturnTransition("show"); }, ToolsMath.SecondsToFrames(2), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
-        }, () =>
-        {
-            GCon.PopPausedType();
-            scrollPanel.Go.SetActive(false);
-        }), "show");
-        scrollPanel.Go.SetActive(false);
+
         descriptionPanel.Go.SetActive(false);
         baseInventory.panel.Go.SetActive(false);
         ToolsUI.ActiveInventory = playerInventory;
+        SetupDeathPanel();
+        SetupScrollPanel();
+        SetupVictoryPanel();
+        SetupTransitionPanel();
+        SetupEndPanel();
+        SetupMenuPanel();
     }
 
+    public static void TriggerDeathPanel()
+    {
+        deathPanel.Go.SetActive(true);
+        ToolsUI.deathPanel.Go.transform.position = Vector3.zero;
+        ToolsUI.deathPanel.StartTransition("show", true);
+        GCon.AddPausedType(ToolsSystem.PauseType.Animation);
+    }
+    public static void TriggerVictoryPanel()
+    {
+        victoryPanel.Go.SetActive(true);
+        victoryPanel.Go.transform.position = Vector3.zero;
+        victoryPanel.StartTransition("show", true);
+        GCon.AddPausedType(ToolsSystem.PauseType.Animation);
+    }
     public static void TriggerScrollPanel(PreUnit unit)
     {
+        Tutorial.CloseTutorial();
         scrollPanel.Go.SetActive(true);
         ToolsUI.scrollPanel.Go.transform.position = Vector3.zero;
         ToolsUI.scrollPanel.Go.transform.GetChild(2).gameObject.GetComponent<Image>().sprite = unit.Prefab.transform.GetChild(0).GetComponent<SpriteRenderer>().sprite;
@@ -225,6 +253,7 @@ public static class ToolsUI
         ToolsUI.scrollPanel.Go.transform.GetChild(4).gameObject.SetActive(true);
         ToolsUI.scrollPanel.Go.transform.GetChild(3).localPosition = new Vector3(117.47f, 117.8f, 0);
         ToolsUI.scrollPanel.Go.transform.GetChild(1).localPosition = new Vector3(-232.82f, -0.17f, 0);
+        ToolsUI.scrollPanel.Go.transform.GetChild(6).gameObject.GetComponent<TMPro.TextMeshProUGUI>().text = unit.Name;
         foreach (Transform child in ToolsUI.scrollPanel.Go.transform.GetChild(3))
         {
             GameObject.Destroy(child.gameObject);
@@ -259,17 +288,48 @@ public static class ToolsUI
             ToolsUI.scrollPanel.Go.transform.GetChild(3).localPosition = new Vector3(0f, -16f);
         }
         ToolsUI.scrollPanel.StartTransition("show", true);
+        scrollPanel.GetTransitable("show").onReturnEnd = () =>
+        {
+            GCon.PopPausedType();
+            scrollPanel.Go.SetActive(false);
+        };
     }
+    public static void TriggerScrollPanel(Scroll scroll)
+    {
+        TriggerScrollPanel(scroll.Unit);
 
+        scrollPanel.GetTransitable("show").onReturnEnd = () =>
+        {
+            GCon.PopPausedType();
+            scrollPanel.Go.SetActive(false);
+            if (scroll.OnClose != null)
+            {
+                scroll.OnClose();
+
+            }
+            if (GCon.game.CurBiom.ScrollsCollected == GCon.game.CurBiom.ScrollsNeeded)
+            {
+                ToolsUI.TriggerVictoryPanel();
+            }
+        };
+    }
+    public static void TriggerMenuPanel()
+    {
+        menuPanel.Go.SetActive(true);
+        menuPanel.Go.transform.position = Vector3.zero;
+        menuPanel.StartTransition("show", true);
+        GCon.AddPausedType(ToolsSystem.PauseType.Menu);
+    }
     private static void AddUnit(GameObject prefab, int childIndex, int i)
     {
+        int space = 250;
         if (i != 0)
         {
             GameObject text = GameObject.Instantiate(new GameObject("text"));
             TMPro.TextMeshProUGUI textObj = text.AddComponent<TMPro.TextMeshProUGUI>();
             text.transform.SetParent(ToolsUI.scrollPanel.Go.transform.GetChild(childIndex));
             text.transform.localScale = Vector3.one;
-            text.transform.localPosition = new Vector3(i * 150 - 75, 0, 0); ;
+            text.transform.localPosition = new Vector3(i * space - space / 2, -10, 0); ;
             textObj.text = "*";
             textObj.alignment = TMPro.TextAlignmentOptions.Center;
             textObj.fontSize = 150;
@@ -280,7 +340,7 @@ public static class ToolsUI
         displayUnit.transform.GetChild(0).gameObject.GetComponent<Image>().preserveAspect = true;
         Component.Destroy(displayUnit.GetComponentInChildren<SpriteRenderer>());
         var rect = displayUnit.AddComponent<RectTransform>();
-        displayUnit.transform.localPosition = new Vector3(i * 150, 0, 0);
+        displayUnit.transform.localPosition = new Vector3(i * space, 0, 0);
         displayUnit.transform.localScale = new Vector3(150, 150, 150);
     }
 
@@ -305,6 +365,115 @@ public static class ToolsUI
         wrapPanel.LoadUI();
     }
 
+    private static void SetupDeathPanel()
+    {
+        deathPanel = new UIItem(GameObject.Find("DeathPanel"));
+        deathPanel.Go.GetComponent<CanvasGroup>().alpha = 0;
+        deathPanel.AddTransition(new Transparentable(0.5f, 1, null, false, () =>
+        {
+            GCon.game.gameActionHandler.AddAction(new ItemAction((ActionHandler item, object[] parameters) => { deathPanel.ReturnTransition("show"); }, ToolsMath.SecondsToFrames(1.7f), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
+            ToolsPhyward.EnterLevel(GCon.game.CurBiom.levels[GCon.game.SavedLevelId], GCon.game.CurBiom.levels[GCon.game.SavedLevelId].GetAllItemsOfType<Base>()[0].Prefab.transform.position);
+            GCon.game.Player.LivedHandler.ChangeLives(GCon.game.Player.LivedHandler.MaxLives, false);
+        }, () =>
+        {
+            GCon.PopPausedType();
+            deathPanel.Go.SetActive(false);
+        }), "show");
+        deathPanel.Go.SetActive(false);
+    }
+    private static void SetupScrollPanel()
+    {
+        scrollPanel = new UIItem(GameObject.FindGameObjectWithTag("ScrollPanel"));
+        scrollPanel.Go.GetComponent<CanvasGroup>().alpha = 0;
+        scrollPanel.AddTransition(new Transparentable(0.5f, 1, null, false, () =>
+        {
+            GCon.game.gameActionHandler.AddAction(new ItemAction((ActionHandler item, object[] parameters) => { scrollPanel.ReturnTransition("show"); }, ToolsMath.SecondsToFrames(3.5f), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
 
+        }, () =>
+        {
+            GCon.PopPausedType();
+            scrollPanel.Go.SetActive(false);
+        }), "show");
+        scrollPanel.Go.SetActive(false);
+    }
+    private static void SetupVictoryPanel()
+    {
+        victoryPanel = new UIItem(GameObject.Find("VictoryPanel"));
+        victoryPanel.Go.GetComponent<CanvasGroup>().alpha = 0;
+        victoryPanel.AddTransition(new Transparentable(0.5f, 1, null, false, () =>
+        {
+            GCon.game.gameActionHandler.AddAction(new ItemAction((ActionHandler item, object[] parameters) =>
+            {
+                ToolsGame.EnterNextBiom();
+                victoryPanel.ReturnTransition("show");
+            }, ToolsMath.SecondsToFrames(2.1f), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
+        }, () =>
+        {
+            GCon.PopPausedType();
+            scrollPanel.Go.SetActive(false);
+        }), "show");
+        victoryPanel.Go.SetActive(false);
+    }
+    private static void SetupTransitionPanel()
+    {
+        transitionPanel = new UIItem(GameObject.Find("TransitionPanel"));
+        transitionPanel.Go.GetComponent<CanvasGroup>().alpha = 0;
+        transitionPanel.AddTransition(new Transparentable(0.5f, 1, null, false, null, () =>
+        {
+            GCon.PopPausedType();
+            transitionPanel.Go.SetActive(false);
+        }), "show");
+        transitionPanel.Go.SetActive(false);
+    }
+    private static void SetupEndPanel()
+    {
+        endPanel = new UIItem(GameObject.Find("EndPanel"));
+        endPanel.Go.GetComponent<CanvasGroup>().alpha = 0;
+        endPanel.AddTransition(new Transparentable(0.5f, 0, null, false, () =>
+        {
+            deathPanel.Go.SetActive(false);
+        }, null), "hide");
+        endPanel.Go.SetActive(false);
+    }
+    private static void SetupMenuPanel()
+    {
+        menuPanel = new UIItem(GameObject.Find("MenuPanel"));
+        menuPanel.Go.GetComponent<CanvasGroup>().alpha = 0;
+        var resume = new ButtonTemplate(menuPanel.Go.transform.GetChild(1).gameObject,true, false, new Scalable(0.3f, new Vector3(1.1f, 1.1f)),null, ToolsSystem.PauseType.Menu);
+        var end = new ButtonTemplate(menuPanel.Go.transform.GetChild(2).gameObject, true, false, new Scalable(0.3f, new Vector3(1.1f, 1.1f)), null, ToolsSystem.PauseType.Menu);
+        resume.OnMouseDown = (UIItem item) => { ToolsUI.menuPanel.ReturnTransition("show"); };
+        end.OnMouseDown = (UIItem item) => { Application.Quit(); };
 
+        menuPanel.AddTransition(new Transparentable(0.5f, 1, null, false, null, () =>
+        {
+            GCon.PopPausedType();
+            menuPanel.Go.SetActive(false);
+        }), "show");
+        menuPanel.Go.SetActive(false);
+    }
+    public static void TriggerTransitionPanel(Action onForwardEnd, float duration = 0.5f)
+    {
+        transitionPanel.Go.SetActive(true);
+        transitionPanel.GetTransitable("show").onForwardEnd = () =>
+        {
+            GCon.game.gameActionHandler.AddAction(new ItemAction((ActionHandler item, object[] parameters) => { transitionPanel.ReturnTransition("show"); }, ToolsMath.SecondsToFrames(duration), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
+
+            if (onForwardEnd != null)
+            {
+                onForwardEnd();
+            }
+        };
+        ToolsUI.transitionPanel.Go.transform.position = Vector3.zero;
+        ToolsUI.transitionPanel.StartTransition("show", true);
+        GCon.AddPausedType(ToolsSystem.PauseType.Animation);
+    }
+    public static void TriggerEndPanel()
+    {
+        endPanel.Go.SetActive(true);
+        endPanel.Go.transform.GetChild(3).GetComponent<TMPro.TextMeshProUGUI>().text = "Tvůj počet smrtí: " + GCon.game.DeathCount;
+        ToolsUI.transitionPanel.Go.transform.position = Vector3.zero;
+        endPanel.Go.GetComponent<CanvasGroup>().alpha = 1;
+        ToolsSystem.DeleteSaveFile(GCon.game.PlayerName);
+        GCon.AddPausedType(ToolsSystem.PauseType.Menu);
+    }
 }

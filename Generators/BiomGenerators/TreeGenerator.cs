@@ -16,7 +16,7 @@ public class TreeGenerator : IBiomGenerator
     {
     }
 
-    override public Dictionary<int, Level> GenerateBiom(Biom biom)
+    override public void GenerateBiom(Biom biom)
     {
         int currentId = GCon.game.IdLevels;
         Dictionary<int, Level> levels = new Dictionary<int, Level>();
@@ -50,12 +50,10 @@ public class TreeGenerator : IBiomGenerator
             levelStructures.Add(structure);
             currentId++;
         }
+
         var arr = levelStructures.ToArray();
-        for (int i = 0; i < arr.Length; i++)
-        {
-            levels.Add(GCon.game.IdLevels, CreateLevel(ToolsMath.GetRandomElement<ILevelGenerator>(levelGenerators), biom, arr[arr.Length - 1 - i].cellWidth * cellSize, arr[arr.Length - 1 - i].cellHeight * cellSize, arr[arr.Length - 1 - i].ExitsAr));
-        }
-        return levels;
+
+        GenerateLevelsFromStructures(arr, biom);
     }
 
 

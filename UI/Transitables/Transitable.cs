@@ -11,7 +11,7 @@ public abstract class Transitable
     protected float elapsed = 0;
     private float duration;
     private float returnDuration;
-    public Action onAnimationEnd;
+    public Action onForwardEnd;
     public Action onReturnEnd;
     public Component component;
     public bool returning = false;
@@ -24,7 +24,7 @@ public abstract class Transitable
         else
             this.curve = ToolsUI.linear;
         this.duration = duration;
-        this.onAnimationEnd = onAnimationEnd;
+        this.onForwardEnd = onAnimationEnd;
         this.onReturnEnd = onReturnEnd;
         if (returnDuration == -1)
             this.returnDuration = duration;
@@ -104,8 +104,8 @@ public abstract class Transitable
         this.elapsed = 0;
         returning = false;
     }
-    public bool CanBeReturned()
+    public bool IsForwardComplete()
     {
-        return elapsed == duration;
+        return elapsed == duration && !returning;
     }
 }

@@ -18,18 +18,20 @@ public static class Units
     public static PreUnit Area() { return new PreUnit("Obsah", "Velikost plochy", "[m^2]", new List<PreUnit>() { length, length }, new List<PreUnit>() { }, GameObjects.area); }
     public static PreUnit Volume() { return new PreUnit("Objem", "Velikost tělesa", "[m^3]", new List<PreUnit>() { length, length, length }, new List<PreUnit>() { }, GameObjects.volume); }
     public static PreUnit Inertia() { return new PreUnit("Hybnost", "Schopnost tělesa se pohybovat a svůj pohyb si uchovat", "[kg*m]", new List<PreUnit>() { speed, mass }, new List<PreUnit>() { }, GameObjects.inertia); }
-    /* public static PreUnit acceleration = new PreUnit("Zrychlení", "O kolik zvýšíš svoji rychlost za jednu sekundu", "[m/s^2]", new List<PreUnit>() { Speed }, new List<PreUnit>() { Time });
-     public static PreUnit force = new PreUnit("Síla", "Vyjadřuje, jak moc na sebe tělesa působí", "newton [N]", new List<PreUnit>() { Mass, acceleration }, new List<PreUnit>() { });
-     public static PreUnit work = new PreUnit("Práce", "Působení síly po dráze - když zvednu kámen nad hlavu, působil jsem silou třeba 10 N a urazil jsem třeba 2 metry, takže práce je 20 J, tradá.", "joule [J]", new List<PreUnit>() { force, Length }, new List<PreUnit>() { });
-     public static PreUnit power = new PreUnit("Výkon", "Kolik práce vykonám za jednu sekundu", "watt [W]", new List<PreUnit>() { work }, new List<PreUnit>() { Time });
+    /*public static PreUnit force = new PreUnit("Síla", "Vyjadřuje, jak moc na sebe tělesa působí", "newton [N]", new List<PreUnit>() { Mass, acceleration }, new List<PreUnit>() { });
+    public static PreUnit work = new PreUnit("Práce", "Působení síly po dráze - když zvednu kámen nad hlavu, působil jsem silou třeba 10 N a urazil jsem třeba 2 metry, takže práce je 20 J, tradá.", "joule [J]", new List<PreUnit>() { force, Length }, new List<PreUnit>() { });
+    public static PreUnit power = new PreUnit("Výkon", "Kolik práce vykonám za jednu sekundu", "watt [W]", new List<PreUnit>() { work }, new List<PreUnit>() { Time });
 
-     public static PreUnit voltage = new PreUnit("Napětí", "Rozdíl elektrického potenciálu mezi dvěma body...", "volt [V]", new List<PreUnit>() { power }, new List<PreUnit>() { current });
-     public static PreUnit resistance = new PreUnit("Odpor", "Udává, jak moc se prostředí brání proti vedení proudu", "ohm [Ω]", new List<PreUnit>() { voltage }, new List<PreUnit>() { current });
-     public static PreUnit charge = new PreUnit("Náboj", "Jak moc je něco nabité... vím, skvělé vysvětlení... ", "coulomb [C]", new List<PreUnit>() { Time, current }, new List<PreUnit>() { });
-     public static PreUnit capacitance = new PreUnit("Kapacita", "Udává schopnost udržet si náboj... na způsob 'nabít, pal!' ", "farad [F]", new List<PreUnit>() { charge }, new List<PreUnit>() { voltage });
-     public static PreUnit volume = new PreUnit("Objem", "Velikost tělesa", "[m^3]", new List<PreUnit>() { Length, Length, Length }, new List<PreUnit>() { });
-     public static PreUnit density = new PreUnit("Hustota", "Kolik váží metr krychlový dané látky", "[kg/m^3]", new List<PreUnit>() { Mass }, new List<PreUnit>() { volume });
-     public static PreUnit pressure = new PreUnit("Tlak", "Jak moc působí síla na danou plochu", "pascal [Pa]", new List<PreUnit>() { force }, new List<PreUnit>() { area });*/
+    public static PreUnit voltage = new PreUnit("Napětí", "Rozdíl elektrického potenciálu mezi dvěma body...", "volt [V]", new List<PreUnit>() { power }, new List<PreUnit>() { current });
+    public static PreUnit resistance = new PreUnit("Odpor", "Udává, jak moc se prostředí brání proti vedení proudu", "ohm [Ω]", new List<PreUnit>() { voltage }, new List<PreUnit>() { current });
+    public static PreUnit charge = new PreUnit("Náboj", "Jak moc je něco nabité... vím, skvělé vysvětlení... ", "coulomb [C]", new List<PreUnit>() { Time, current }, new List<PreUnit>() { });
+    public static PreUnit capacitance = new PreUnit("Kapacita", "Udává schopnost udržet si náboj... na způsob 'nabít, pal!' ", "farad [F]", new List<PreUnit>() { charge }, new List<PreUnit>() { voltage });
+    public static PreUnit volume = new PreUnit("Objem", "Velikost tělesa", "[m^3]", new List<PreUnit>() { Length, Length, Length }, new List<PreUnit>() { });
+    public static PreUnit pressure = new PreUnit("Tlak", "Jak moc působí síla na danou plochu", "pascal [Pa]", new List<PreUnit>() { force }, new List<PreUnit>() { area });*/
+    public static PreUnit Density() { return new PreUnit("Hustota", "Kolik váží metr krychlový dané látky", "[kg/m^3]", new List<PreUnit>() { mass }, new List<PreUnit>() { volume }, GameObjects.density); }
+    public static PreUnit Acceleration() { return new PreUnit("Zrychlení", "O kolik zvýšíš svoji rychlost za jednu sekundu", "[m/s^2]", new List<PreUnit>() { speed }, new List<PreUnit>() { time }, GameObjects.acceleration); }
+    public static PreUnit Force() { return new PreUnit("Síla", "Vyjadřuje, jak moc na sebe tělesa působí", "newton [N]", new List<PreUnit>() { mass,acceleration }, new List<PreUnit>() { }, GameObjects.force); }
+
 
 
     public static PreUnit time = Time();
@@ -40,8 +42,11 @@ public static class Units
     public static PreUnit area = Area();
     public static PreUnit volume = Volume();
     public static PreUnit inertia = Inertia();
+    public static PreUnit density = Density();
+    public static PreUnit acceleration = Acceleration();
+    public static PreUnit force = Force();
 
-    public static List<PreUnit> allUnits = new List<PreUnit>() { time, length, mass, /*current, luminiscence, temperature,*/ speed, frequency, area, volume, inertia/* acceleration, force, work, power, voltage, charge, capacitance, area, volume, density, pressure, inertia*/};
+    public static List<PreUnit> allUnits = new List<PreUnit>() { time, length, mass, /*current, luminiscence, temperature,*/ speed, frequency, area, volume, inertia, density, acceleration, force/* work, power, voltage, charge, capacitance, area, volume, pressure, inertia*/};
 
     public static PreUnit ComposeUnit(List<PreUnit> numerator, List<PreUnit> denominator)
     {

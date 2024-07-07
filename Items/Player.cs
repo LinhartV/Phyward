@@ -19,64 +19,18 @@ public class Player : Character
 
     public Player() { }
 
-    public Player(Vector2 pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, weapon, charDamage, charReloadTime, charShotSpeed, charShotDuration, lives, GameObjects.player, true, true, map)
-    {/*
-        this.AddControlledMovement(new AcceleratedMovement(0, 0, this.Acceleration, BaseSpeed), "up");
-        this.AddControlledMovement(new AcceleratedMovement(0, (float)Math.PI / 2, this.Acceleration, BaseSpeed), "right");
-        this.AddControlledMovement(new AcceleratedMovement(0, (float)Math.PI, this.Acceleration, BaseSpeed), "down");
-        this.AddControlledMovement(new AcceleratedMovement(0, (float)(3 * Math.PI / 2), this.Acceleration, BaseSpeed), "left");
-        this.AddAction(new ItemAction("faceCursor", 1, ItemAction.ExecutionType.EveryTime, ItemAction.OnLeaveType.KeepRunning));
-        SetAngle = false;*/
+    public Player(Vector2 pos, float baseSpeed, float acceleration, float friction, IWeapon weapon, float charDamage, float charReloadTime, float charShotSpeed, float charShotDuration, float lives, Armor armor, Tilemap map = null) : base(pos, baseSpeed, acceleration, friction, weapon, charDamage, charReloadTime, charShotSpeed, charShotDuration, lives, GameObjects.player, true, true, armor, map)
+    {
         Dictionary<string, IMovement> movements = new Dictionary<string, IMovement>();
         movements.Add("up", new AcceleratedMovement(0, 0, this.Acceleration, BaseSpeed));
         movements.Add("right", new AcceleratedMovement(0, (float)Math.PI / 2, this.Acceleration, BaseSpeed));
         movements.Add("down", new AcceleratedMovement(0, (float)Math.PI, this.Acceleration, BaseSpeed));
         movements.Add("left", new AcceleratedMovement(0, (float)Math.PI * 3 / 2, this.Acceleration, BaseSpeed));
         AddControlledMovement(new CompositeMovement(new AcceleratedMovement(0, 0, this.Acceleration, baseSpeed), movements), "movement");
-        /*Dictionary<string, IMovement> movements = new Dictionary<string, IMovement>();
-        movements.Add("up", new ConstantMovement(BaseSpeed, 0));
-        movements.Add("right", new ConstantMovement(BaseSpeed, (float)Math.PI / 2));
-        movements.Add("down", new ConstantMovement(BaseSpeed, (float)Math.PI));
-        movements.Add("left", new ConstantMovement(BaseSpeed, (float)Math.PI * 3 / 2));
-        AddControlledMovement(new CompositeMovement(new ConstantMovement(BaseSpeed, 0), movements), "movement");*/
         this.AddAction(new ItemAction("faceCursor", 1, ItemAction.ExecutionType.EveryTime, ItemAction.OnLeaveType.KeepRunning));
         SetAngle = false;
         IsInLevel = true;
-        for (int i = 0; i < 5; i++)
-        {
-            var time = new Unit(Units.Time());
-            time.InsertAtPosition(this.Prefab.transform.position + new Vector3(0, 0), true);
-            GCon.game.CurLevel.AddItem(time);
-        }
-        for (int i = 0; i < 5; i++)
-        {
-            var time = new Collectable(CraftedEdibles.Medkit());
-            time.InsertAtPosition(this.Prefab.transform.position + new Vector3(0, 0), true);
-            GCon.game.CurLevel.AddItem(time);
-        }
-        /*var scroll = new Collectable(new Scroll(Units.volume));
-        scroll.InsertAtPosition(this.Prefab.transform.position + new Vector3(3f, 0), true);
-        GCon.game.CurLevel.AddItem(scroll);
 
-        var scroll2 = new Collectable(new Scroll(Units.frequency));
-        scroll2.InsertAtPosition(this.Prefab.transform.position + new Vector3(2f, 0), true);
-        GCon.game.CurLevel.AddItem(scroll2);
-        var scroll3 = new Collectable(new Scroll(Units.area));
-        scroll3.InsertAtPosition(this.Prefab.transform.position + new Vector3(0, 2), true);
-        GCon.game.CurLevel.AddItem(scroll3);*/
-
-        PlayerControl.DiscoverNewUnit(Units.volume);
-        PlayerControl.DiscoverNewUnit(Units.area);
-        PlayerControl.DiscoverNewUnit(Units.frequency);
-        PlayerControl.DiscoverNewUnit(Units.mass);
-        PlayerControl.DiscoverNewUnit(Units.time);
-        PlayerControl.DiscoverNewUnit(Units.length);
-        PlayerControl.DiscoverNewUnit(Units.speed);
-
-        GCon.game.CurLevel.AddItem(new Base(this.Prefab.transform.position));
-        PlayerControl.backpack.Add(CraftedWeapons.Sling());
-        PlayerControl.backpack.Add(CraftedWeapons.SlingShot());
-        PlayerControl.backpack.Add(CraftedWeapons.Blowgun());
     }
 
     public void UseEBonus()
@@ -97,15 +51,12 @@ public class Player : Character
             lst.StartCountDown();
             lst.RemoveSlotable(false);
         }
-
     }
 
     protected override void SetupItem()
     {
         base.SetupItem();
         setActiveOnLoad = true;
-
-        //Prefab.GetComponent<ExitScript>().X = exitX;
     }
     public override void OnCollisionEnter(Item collider)
     {
@@ -116,11 +67,8 @@ public class Player : Character
         {
             if (collider is Exit e)
             {
-                var lvl = GCon.game.CurBiom.levels[e.LevelId];
                 Vector2 pos = new Vector2(0, 0);
 
-                GCon.freezeCamera = true;
-                GCon.game.gameActionHandler.AddAction(new ItemAction("unfreeze", 1, ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
                 foreach (var exits in GCon.game.CurBiom.levels[e.LevelId].ExitsAr)
                 {
                     foreach (var exit in exits)
@@ -132,10 +80,7 @@ public class Player : Character
                         }
                     }
                 }
-                GameObject.Find("UnityControl").GetComponent<UnityControl>().BuildLevel(lvl, GCon.game.CurLevel, pos);
-                GCon.game.CurLevel.OnLeave();
-                GCon.game.CurLevel = lvl;
-                lvl.OnEnter();
+                ToolsPhyward.EnterLevel(GCon.game.CurBiom.levels[e.LevelId], pos);
             }
             if (collider is Enemy en)
             {
@@ -146,6 +91,15 @@ public class Player : Character
                 if (PlayerControl.AutoPickup)
                 {
                     PlayerControl.PickupCollectable(col);
+                    if (col.SlotableRef.PrefabName == CraftedWeapons.Blowgun().PrefabName && GCon.game.TutorialPhase == 0)
+                    {
+                        GCon.game.TutorialPhase = 1;
+                    }
+                    if (col.SlotableRef.PrefabName == Units.time.PrefabName && GCon.game.TutorialPhase == 3)
+                    {
+                        Tutorial.ShowTutorial(new Tutorial.TutorialBlock("Nález veličiny", "Poražený nepřítel se proměnil v Čas... bude se hodit na výrobu silnějších zbraní.", "Do inventáře se ti přidala veličina, která bude užitečná při vyrábění. Otevři inventář a najeď na čas, aby ses dočetl více."));
+                        GCon.game.TutorialPhase = 4;
+                    }
                 }
             }
         }
@@ -163,15 +117,45 @@ public class Player : Character
             }
         }
     }
-    public override void Death()
+    public override bool Death()
     {
-        Debug.Log("You died");
+        if (GCon.GetPausedType() == ToolsSystem.PauseType.InGame)
+        {
+            GCon.game.DeathCount++;
+            ToolsUI.TriggerDeathPanel();
+            GCon.game.Coef *= 0.9f;
+            /*List<Slotable> temp = new List<Slotable>(PlayerControl.backpack);
+            foreach (var item in temp)
+            {
+                if (item is PreUnit || item is Edible)
+                {
+                    PlayerControl.RemoveFromBackpack(item);
+                }
+            }*/
+            foreach (var level in GCon.game.CurBiom.levels)
+            {
+                foreach (var item in level.Items.Values)
+                {
+                    if (item is ILived il)
+                    {
+                        il.LivedHandler.ChangeLives(il.LivedHandler.MaxLives, false);
+                    }
+                    if (item is Enemy e && e.IsMinion)
+                    {
+                        e.Dispose();
+                    }
+                }
+            }
+            ToolsSystem.ReleaseAllKeys();
+            this.LivedHandler.ChangeLives(LivedHandler.MaxLives, false);
+        }
+        return true;
     }
     public override void UpdateHealthBar()
     {
-        if (MaxLives != 0)
+        if (LivedHandler.MaxLives != 0)
         {
-            damagebar.line.EditPoint(1, new Vector3(250 - 500 * (MaxLives - Lives) / MaxLives, 0, 0), 25);
+            damagebar.line.EditPoint(1, new Vector3(250 - 500 * (LivedHandler.MaxLives - LivedHandler.Lives) / LivedHandler.MaxLives, 0, 0), 25);
         }
     }
     public override void AddHealthBar()

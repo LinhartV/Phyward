@@ -7,7 +7,6 @@ using Unity.VisualScripting;
 using Unity.VisualScripting.Antlr3.Runtime.Misc;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEditor.Progress;
 
 public class SlotTemplate : UIItem
 {
@@ -38,6 +37,7 @@ public class SlotTemplate : UIItem
     /// </summary>
     private GameObject text;
     private GameObject placeHolder;
+    private GameObject placeHolderImage;
 
     //public int Count { get; private set; }
     /// <summary>
@@ -150,7 +150,7 @@ public class SlotTemplate : UIItem
             }
             if (SlotableRef != null && ToolsUI.DraggedSlot == null && GCon.GetPausedType() == ToolsSystem.PauseType.Inventory)
             {
-                this.AddAction(new ItemAction("ShowDescription", 60, ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
+                this.AddAction(new ItemAction("ShowDescription", 40, ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning));
             }
         }
         //ToolsUI.SetCursor(ToolsUI.selectCursor);
@@ -452,7 +452,7 @@ public class SlotTemplate : UIItem
     {
         if (this.Go.transform.GetChild(1).gameObject.activeInHierarchy)
         {
-            GameObject.DestroyImmediate(this.Go.transform.GetChild(1).gameObject);
+            GameObject.Destroy(this.Go.transform.GetChild(1).gameObject);
         }
         hasTextAttached = false;
         hasSlotableDisplayed = false;
@@ -466,6 +466,7 @@ public class SlotTemplate : UIItem
     {
         if (placeHolder == null && text != "")
         {
+            ChangePlaceHolderImage(null);
             placeHolder = UnityEngine.Object.Instantiate(GameObjects.text);
             placeHolder.transform.SetParent(Go.transform.GetChild(0));
             placeHolder.transform.SetAsFirstSibling();
@@ -483,6 +484,34 @@ public class SlotTemplate : UIItem
         else if (placeHolder != null)
         {
             Component.Destroy(placeHolder);
+        }
+    }
+
+    /// <summary>
+    /// Change placeholder image
+    /// </summary>
+    /// <param name="sprite">Set null to delete placeholder</param>
+    public void ChangePlaceHolderImage(Sprite sprite)
+    {
+        if (placeHolderImage == null && sprite != null)
+        {
+            ChangePlaceHolder("");
+            placeHolderImage = UnityEngine.Object.Instantiate(new GameObject("PlaceholderImage"));
+            placeHolderImage.transform.SetParent(Go.transform.GetChild(0));
+            placeHolderImage.transform.SetAsFirstSibling();
+            var imageUI = placeHolderImage.AddComponent<Image>();
+            imageUI.sprite = sprite;
+            imageUI.color = new Color(1, 1, 1, 0.5f);
+            placeHolderImage.transform.localScale = new Vector3(1 / placeHolderImage.transform.parent.localScale.x, 1 / placeHolderImage.transform.parent.localScale.y);
+            placeHolderImage.transform.localPosition = Vector3.zero;
+        }
+        else if (sprite != null)
+        {
+            placeHolderImage.GetComponent<Image>().sprite = sprite;
+        }
+        else if (placeHolderImage != null)
+        {
+            Component.Destroy(placeHolderImage);
         }
     }
 

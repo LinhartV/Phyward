@@ -17,7 +17,8 @@ public class ExitHandler
     public int Id { get; set; }
 
     //Position of lastly added exit
-    protected int lastAddedExitDirection;
+    public int LastAddedExitDirection { get; protected set; }
+    public int FirstAddedExitDirection { get; protected set; } = -1;
     public ExitHandler() { }
     //Just not to be triggered by JSON
     public ExitHandler(bool loading)
@@ -58,12 +59,35 @@ public class ExitHandler
             exit1.ExitId = ExitId;
             ExitsAr[direction].Add(exit1);
             otherLevel.ExitsAr[(direction + 2) % 4].Add(exit2);
-            lastAddedExitDirection = direction;
+            otherLevel.LastAddedExitDirection = (direction + 2) % 4;
+            LastAddedExitDirection = direction;
+            if (FirstAddedExitDirection == -1)
+            {
+                FirstAddedExitDirection = direction;
+            }
+            if (otherLevel.FirstAddedExitDirection == -1)
+            {
+                otherLevel.FirstAddedExitDirection = (direction + 2) % 4;
+            }
         }
     }
     public void PopExit()
     {
-        ExitsAr[lastAddedExitDirection].RemoveAt(ExitsAr[lastAddedExitDirection].Count - 1);
+        ExitsAr[LastAddedExitDirection].RemoveAt(ExitsAr[LastAddedExitDirection].Count - 1);
+    }
+    /// <summary>
+    /// Gets one exit which player (probably) didn't use to first get into this room
+    /// </summary>
+    public Vector2 GetOutExitPosition(bool getInExit = false)
+    {
+        if (!getInExit)
+        {
+            return new Vector2(ExitsAr[LastAddedExitDirection][0].X, ExitsAr[LastAddedExitDirection][0].Y);
+        }
+        else
+        {
+            return new Vector2(ExitsAr[FirstAddedExitDirection][0].X, ExitsAr[FirstAddedExitDirection][0].Y);
+        }
     }
 }
 

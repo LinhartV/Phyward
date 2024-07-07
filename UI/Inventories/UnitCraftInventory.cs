@@ -38,6 +38,20 @@ public class UnitCraftInventory : Inventory
             panel.StartTransition("reveal");
             UpdateUnitsInventory();
             UpdateScrolls();
+            if (GCon.game.TutorialPhase == 6)
+            {
+                GCon.game.TutorialPhase = 7;
+                GCon.game.CurLevel.DestroyAllItemsOfType<InvisibleBlock>();
+                Tutorial.ShowTutorial(new Tutorial.TutorialBlock("Kombinování veličin", "Zde pomocí fyzikálních vzorců získáváš vzácnější veličiny", "V horní liště vidíš své suroviny, vpravo objevené svitky, uprostřed výrobu surovin.", null, () =>
+                {
+                    Tutorial.ShowTutorial(new Tutorial.TutorialBlock("Rychlost lze vyjádřit jako dráha za čas.\nPřetáhni dráhu (s) do čitatele a čas (t) do jmenovatele a klikni Vyrobit.", null, null, 25));
+                }, 25));
+            }
+            if (GCon.game.TutorialPhase > 8 && GCon.game.showedFractionExplanation == false)
+            {
+                GCon.game.showedFractionExplanation = true;
+                Tutorial.ShowTutorial(new Tutorial.TutorialBlock("Zjednodušení výroby.","Zrychlení se spočítá jako rychlost za čas. A rychlost se spočítá jako dráha za čas.","Zrychlení tedy lze vyjádřit jako dráha lomeno čas krát čas - a takto to lze se vším!", null, null, 25));
+            }
             return true;
         }
         return false;
@@ -83,8 +97,12 @@ public class UnitCraftInventory : Inventory
                 {
                     GCon.game.Player.PlayerControl.SpendMaterial(denominatorUnits[i], 1);
                     animate(denominatorSlots[i]);
+                };
+                if (GCon.game.TutorialPhase == 7)
+                {
+                    GCon.game.TutorialPhase = 8;
+                    Tutorial.ShowTutorial(new Tutorial.TutorialBlock("Dobrá práce! Fyzikální svět je neomezený! Nalézej svitky, kombinuj a experimentuj. Silnější veličiny znamenají silnější zbraně.", null, null, 25));
                 }
-                ;
                 GCon.game.gameActionHandler.AddAction(new ItemAction((item, parameter) =>
                 {
                     result.AddSlotable(unit);
@@ -96,6 +114,7 @@ public class UnitCraftInventory : Inventory
                     result.RemoveSlotable();
                 }, ToolsMath.SecondsToFrames(0.8f), ItemAction.ExecutionType.OnlyFirstTime, ItemAction.OnLeaveType.KeepRunning, null, unit));
                 //UpdateInventory();
+                
             }
             else
             {

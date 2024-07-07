@@ -4,6 +4,7 @@ using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEngine.UIElements;
 
 /// <summary>
 /// Object that actions can be assigned to
@@ -85,20 +86,20 @@ public class ActionHandler : IEqualityComparer<ActionHandler>
             {
                 if (tempActions[actionName].Item1 + tempActions[actionName].Item2.NowDifference < now)
                 {
-                    if (actions[actionName].Item2.executionType == ItemAction.ExecutionType.EveryTime || (actions[actionName].Item2.Repeat == 0 && actions[actionName].Item2.executionType == ItemAction.ExecutionType.OnlyFirstTime))
+                    if (tempActions[actionName].Item2.executionType == ItemAction.ExecutionType.EveryTime || (tempActions[actionName].Item2.Repeat == 0 && tempActions[actionName].Item2.executionType == ItemAction.ExecutionType.OnlyFirstTime))
                     {
-                        if (actions[actionName].Item2.lambdaAction == null)
+                        if (tempActions[actionName].Item2.lambdaAction == null)
                         {
-                            LambdaActions.ExecuteAction(actions[actionName].Item2.ActionName, this, actions[actionName].Item2.Parameters);
+                            LambdaActions.ExecuteAction(tempActions[actionName].Item2.ActionName, this, tempActions[actionName].Item2.Parameters);
                         }
                         else
                         {
-                            actions[actionName].Item2.lambdaAction(this, actions[actionName].Item2.Parameters);
+                            tempActions[actionName].Item2.lambdaAction(this, actions[actionName].Item2.Parameters);
                         }
                     }
-                    else if (actions[actionName].Item2.executionType == ItemAction.ExecutionType.NotFirstTime)
+                    else if (tempActions[actionName].Item2.executionType == ItemAction.ExecutionType.NotFirstTime)
                     {
-                        actions[actionName].Item2.executionType = ItemAction.ExecutionType.EveryTime;
+                        tempActions[actionName].Item2.executionType = ItemAction.ExecutionType.EveryTime;
                     }
                     actions.Remove(actionName);
                     if (tempActions[actionName].Item2.Repeat > 0 && tempActions[actionName].Item2.executionType != ItemAction.ExecutionType.StopExecuting)
@@ -112,6 +113,17 @@ public class ActionHandler : IEqualityComparer<ActionHandler>
 
                 }
             }
+        }
+    }
+    public void ChangeItemActionParameter(string name, int pos, object value)
+    {
+        if (actions.ContainsKey(name))
+        {
+            actions[name].Item2.Parameters[pos] = value;
+        }
+        else if (actionsEveryFrame.ContainsKey(name))
+        {
+            actionsEveryFrame[name].Parameters[pos] = value;
         }
     }
     public bool ChangeRepeatTime(double repeat, string actionName)
@@ -175,7 +187,10 @@ public class ActionHandler : IEqualityComparer<ActionHandler>
             {
                 if (!GCon.gameSystems[type].itemStep.Contains(this))
                 {
-                    GCon.gameSystems[type].itemStep.Add(this);
+                    if (delay == 0)
+                    {
+                        GCon.gameSystems[type].itemStep.Add(this);
+                    }
                 }
             }
         }
@@ -197,29 +212,52 @@ public class ActionHandler : IEqualityComparer<ActionHandler>
             {
                 temp.Add(storeName + storeIndex.ToString(), (delay, action));
                 storeIndex++;
+                List<object> list = new List<object>(action.Parameters);
+                list.Add(storeName + (storeIndex - 1).ToString());
+                action.Parameters = list.ToArray();
                 return storeName + (storeIndex - 1).ToString();
             }
         }
         else
         {
-            if (!tempEveryFrame.ContainsKey(storeName))
-                tempEveryFrame.Add(storeName, action);
-            else if (rewrite == RewriteEnum.Rewrite)
+            if (delay > 0)
             {
-                tempEveryFrame.Remove(storeName);
-                tempEveryFrame.Add(storeName, action);
+                this.AddAction(new ItemAction("addDelayedAction", delay, ItemAction.ExecutionType.OnlyFirstTime, action.onLeaveType, action.pauseTypes, action, (int)rewrite), 0, RewriteEnum.AddNew);
             }
-            else if (rewrite == RewriteEnum.AddNew)
+            else
             {
-                tempEveryFrame.Add(storeName + storeIndex.ToString(), action);
-                storeIndex++;
-                return storeName + (storeIndex - 1).ToString();
+
+                if (!tempEveryFrame.ContainsKey(storeName))
+                    tempEveryFrame.Add(storeName, action);
+                else if (rewrite == RewriteEnum.Rewrite)
+                {
+                    tempEveryFrame.Remove(storeName);
+                    tempEveryFrame.Add(storeName, action);
+                }
+                else if (rewrite == RewriteEnum.AddNew)
+                {
+                    tempEveryFrame.Add(storeName + storeIndex.ToString(), action);
+                    storeIndex++;
+
+                    List<object> list = new List<object>(action.Parameters);
+                    list.Add(storeName + (storeIndex - 1).ToString());
+                    action.Parameters = list.ToArray();
+                    return storeName + (storeIndex - 1).ToString();
+                }
             }
+
         }
+
+        List<object> l = new List<object>(action.Parameters);
+        l.Add(storeName);
+        action.Parameters = l.ToArray();
         return storeName;
 
     }
-
+    public void DeleteAction(string name, ActionHandler thisItemAction)
+    {
+        DeleteAction(name + thisItemAction.GetType().Name);
+    }
     public void DeleteAction(string name)
     {
         if (actions.ContainsKey(name))

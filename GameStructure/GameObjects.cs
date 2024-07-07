@@ -41,9 +41,29 @@ public static class GameObjects
     public static GameObject inertia;
     public static GameObject craftingScroll;
     public static GameObject medkit;
+    public static GameObject basicArmor;
+    public static GameObject block;
+    public static GameObject blackShot;
+    public static GameObject blowgunShot;
+    public static GameObject boss1;
+    public static GameObject shootingEnemy;
+    public static GameObject pebble;
+    public static GameObject justBlock;
+    public static TileBase wallTile;
+    public static GameObject bandage;
+    public static GameObject boss2;
+    public static GameObject swarmEnemy;
+    public static GameObject density;
+    public static GameObject acceleration;
+    public static GameObject leatherArmor;
+    public static GameObject force;
+    public static GameObject speedUp;
+    public static GameObject fastReload;
+    public static GameObject finalBoss;
+    public static GameObject acceleratedHealing;
+    public static GameObject portal;
 
-
-    public static void SetPrefabs(GameObject _medkit, GameObject _craftingScroll, GameObject _inertia, GameObject _volume, GameObject _area, GameObject _scroll, GameObject _burningRock, GameObject _crumblingRock,GameObject _craftable, GameObject _baseHouse, GameObject _sling, GameObject _blowgun, GameObject _slingshot,GameObject _counter, GameObject _unitAnimation, GameObject _slot, GameObject _speed, GameObject _frequency, GameObject _mass, GameObject _length, GameObject _redSmallEnemy, GameObject _healthBarStandard, GameObject _purpleEnemy, GameObject _time, GameObject _redSmallShot, GameObject _fireSwarmShot, GameObject _exit, GameObject _empty, GameObject _player, GameObject _blueShot, Tilemap _solidLayer)
+    public static void SetPrefabs(GameObject _portal, GameObject _finalBoss, GameObject _acceleratedHealing, GameObject _fastReload, GameObject _speedUp, GameObject _leatherArmor, GameObject _force, GameObject _acceleration, GameObject _density, GameObject _swarmEnemy, GameObject _boss2, GameObject _bandage, GameObject _justBlock, GameObject _pebble, GameObject _blackshot, GameObject _blowgunShot, GameObject _boss1, GameObject _shootingEnemy, GameObject _block, GameObject _basicArmor, GameObject _medkit, GameObject _craftingScroll, GameObject _inertia, GameObject _volume, GameObject _area, GameObject _scroll, GameObject _burningRock, GameObject _crumblingRock, GameObject _craftable, GameObject _baseHouse, GameObject _sling, GameObject _blowgun, GameObject _slingshot, GameObject _counter, GameObject _unitAnimation, GameObject _slot, GameObject _speed, GameObject _frequency, GameObject _mass, GameObject _length, GameObject _redSmallEnemy, GameObject _healthBarStandard, GameObject _purpleEnemy, GameObject _time, GameObject _redSmallShot, GameObject _fireSwarmShot, GameObject _exit, GameObject _empty, GameObject _player, GameObject _blueShot, Tilemap _solidLayer, TileBase _wallTile)
     {
         tilemaps.Add(_solidLayer.name, _solidLayer);
         prefabs.Add(_empty.name, _empty);
@@ -76,6 +96,47 @@ public static class GameObjects
         prefabs.Add(_inertia.name, _inertia);
         prefabs.Add(_craftingScroll.name, _craftingScroll);
         prefabs.Add(_medkit.name, _medkit);
+        prefabs.Add(_basicArmor.name, _basicArmor);
+        prefabs.Add(_block.name, _block);
+        prefabs.Add(_blackshot.name, _blackshot);
+        prefabs.Add(_blowgunShot.name, _blowgunShot);
+        prefabs.Add(_boss1.name, _boss1);
+        prefabs.Add(_shootingEnemy.name, _shootingEnemy);
+        prefabs.Add(_pebble.name, _pebble);
+        prefabs.Add(_justBlock.name, _justBlock);
+        prefabs.Add(_bandage.name, _bandage);
+        prefabs.Add(_boss2.name, _boss2);
+        prefabs.Add(_swarmEnemy.name, _swarmEnemy);
+        prefabs.Add(_density.name, _density);
+        prefabs.Add(_acceleration.name, _acceleration);
+        prefabs.Add(_force.name, _force);
+        prefabs.Add(_leatherArmor.name, _leatherArmor);
+        prefabs.Add(_speedUp.name, _speedUp);
+        prefabs.Add(_fastReload.name, _fastReload);
+        prefabs.Add(_acceleratedHealing.name, _acceleratedHealing);
+        prefabs.Add(_finalBoss.name, _finalBoss);
+        prefabs.Add(_portal.name, _portal);
+        portal = _portal;
+        finalBoss = _finalBoss;
+        acceleratedHealing = _acceleratedHealing;
+        fastReload = _fastReload;
+        speedUp = _speedUp;
+        leatherArmor = _leatherArmor;
+        force = _force;
+        acceleration = _acceleration;
+        density = _density;
+        swarmEnemy = _swarmEnemy;
+        boss2 = _boss2;
+        bandage = _bandage;
+        justBlock = _justBlock;
+        wallTile = _wallTile;
+        pebble = _pebble;
+        shootingEnemy = _shootingEnemy;
+        boss1 = _boss1;
+        blowgunShot = _blowgunShot;
+        blackShot = _blackshot;
+        block = _block;
+        basicArmor = _basicArmor;
         medkit = _medkit;
         craftingScroll = _craftingScroll;
         inertia = _inertia;
@@ -110,11 +171,11 @@ public static class GameObjects
     }
     public static GameObject GetPrefabByName(string name)
     {
-        return prefabs[name];
+        return prefabs[name.Split("(Clone)")[0]];
     }
     public static Tilemap GetTilemapByName(string name)
     {
-        return tilemaps[name];
+        return tilemaps[name.Split("(Clone)")[0]];
     }
 
 }

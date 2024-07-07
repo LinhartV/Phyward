@@ -56,7 +56,7 @@ public class ItemScript : MonoBehaviour
             }
             else
             {
-                scr = collision.gameObject.GetComponentInParent<ItemScript>();
+                scr = collision.gameObject.transform.parent.gameObject.GetComponent<ItemScript>();
                 if (scr != null && GCon.game.Items.ContainsKey(scr.item.Id))
                     item.OnCollisionLeave(GCon.game.Items[scr.item.Id]);
                 else

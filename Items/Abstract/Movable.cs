@@ -114,6 +114,7 @@ public abstract class Movable : Item, IPausable
     protected override void SetupItem()
     {
         base.SetupItem();
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         this.rb.velocity = new Vector2(xVelocity, yVelocity);
     }
     /// <summary>
@@ -155,6 +156,10 @@ public abstract class Movable : Item, IPausable
             {
                 MovementsAutomated.Remove(movement);
             }
+            if (MovementsControlled.ContainsValue(movement) && movement.KeepUpdated)
+            {
+                movement.UpdateMovement();
+            }
             xy = movement.Move(); //ToolsMath.PolarToCartesian(movement.Angle, movement.MovementSpeed);
             x += xy.Item1;
             y += xy.Item2;
@@ -164,7 +169,10 @@ public abstract class Movable : Item, IPausable
         //this.Y += y;
         if (SetAngle)
         {
-            Angle = ToolsMath.GetAngleFromLengts(x, y);
+            if (!(x == 0 && y == 0))
+            {
+                Angle = ToolsMath.GetAngleFromLengts(x, y);
+            }
         }
         prevVelocity = rb.velocity;
     }

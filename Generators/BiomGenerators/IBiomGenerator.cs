@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Unity.Burst.Intrinsics;
 using static ToolsGame;
 
 public abstract class IBiomGenerator
@@ -26,7 +27,7 @@ public abstract class IBiomGenerator
         this.keepLinear = keepLinear;
     }
 
-    protected class LevelStructure : ExitHandler
+    public class LevelStructure : ExitHandler
     {
         public int x;
         public int y;
@@ -52,7 +53,7 @@ public abstract class IBiomGenerator
     /// <param name="biom">Reference to biom itself</param>
     /// <param name="maxSize">Maximal size of level (how many level cells the level can contain)</param>
     /// <returns></returns>
-    public abstract Dictionary<int, Level> GenerateBiom(Biom biom);
+    public abstract void GenerateBiom(Biom biom);
     /// <summary>
     /// Creates a level for this biom
     /// </summary>
@@ -61,12 +62,33 @@ public abstract class IBiomGenerator
     /// <param name="gameControlReference"></param>
     /// <param name="exits">How many exits are on each side (up, right, down, left)</param>
     /// <returns></returns>
-    protected Level CreateLevel(ILevelGenerator generator, Biom biom, int width, int height, List<PreExit>[] exits)
+    public Level CreateLevel(ILevelGenerator generator, Biom biom, int width, int height, List<PreExit>[] exits, int lastAddetExitDirection, int firstAddedExitDirection, int strId)
     {
-        var lvl = new Level(GCon.game.IdLevels++, generator, width, height, exits);
-        biom.levels.Add(GCon.game.IdLevels, lvl);
+        var lvl = new Level(GCon.game.IdLevels, generator, width, height, exits, lastAddetExitDirection, firstAddedExitDirection);
+        lvl.Id = strId;
+        biom.levels.Add(lvl);
+        GCon.game.IdLevels++;
         return lvl;
+    }
+    public Level CreateLevel(ILevelGenerator generator, Biom biom, LevelStructure str, int cellSize = 0)
+    {
+        if (cellSize == 0)
+        {
+            cellSize = this.cellSize;
+        }
+        var lvl = new Level(GCon.game.IdLevels, generator, str.cellWidth * cellSize, str.cellHeight * cellSize, str.ExitsAr, str.LastAddedExitDirection, str.FirstAddedExitDirection);
+        lvl.Id = str.Id;
+        biom.levels.Add(lvl);
+        GCon.game.IdLevels++;
+        return lvl;
+    }
 
+    protected void GenerateLevelsFromStructures(LevelStructure[] arr, Biom biom)
+    {
+        for (int i = 0; i < arr.Length; i++)
+        {
+            CreateLevel(ToolsMath.GetRandomElement<ILevelGenerator>(levelGenerators), biom, arr[arr.Length - 1 - i].cellWidth * cellSize, arr[arr.Length - 1 - i].cellHeight * cellSize, arr[arr.Length - 1 - i].ExitsAr, arr[arr.Length - 1 - i].LastAddedExitDirection, arr[arr.Length - 1 - i].FirstAddedExitDirection, arr[arr.Length - 1 - i].Id);
+        }
     }
     /// <summary>
     /// Randomly chooses cell width and height of new level
@@ -158,12 +180,20 @@ public abstract class IBiomGenerator
         increasingDim++;
         cellSize += keptDim;
     }
-    protected (int, int) MoveInDirection(ref int x, ref int y, ref LevelStructure structure, List<LevelStructure> allLevelStructures, double probability, int maxSize, bool keepLinear, int direction, int currentId, int cellSize)
+    /// <param name="direction">0-up; 1-right; 2-down; 3-left</param>
+    public void MoveInDirection(ref int x, ref int y, ref LevelStructure structure, int direction, int currentId, int width = 1, int height = 1)
+    {
+        MoveInDirection(ref x, ref y, ref structure, null, 0, 1, false, direction, currentId, width, height);
+    }   
+    /// <param name="direction">0-up; 1-right; 2-down; 3-left</param>
+    public void MoveInDirection(ref int x, ref int y, ref LevelStructure structure, List<LevelStructure> allLevelStructures, double probability, int maxSize, bool keepLinear, int direction, int currentId, int width = 1, int height = 1)
     {
         int widthIndex = 0;
         int heightIndex = 0;
         if (structure != null)
         {
+            x = structure.x;
+            y = structure.y;
             switch (direction)
             {
                 case 0:
@@ -192,8 +222,10 @@ public abstract class IBiomGenerator
                     break;
             }
         }
-
-        (int width, int height) = GetCellSize(probability, maxSize, keepLinear, x, y, widthIndex, heightIndex, allLevelStructures);
+        if (allLevelStructures != null)
+        {
+            (width, height) = GetCellSize(probability, maxSize, keepLinear, x, y, widthIndex, heightIndex, allLevelStructures);
+        }
 
         switch (direction)
         {
@@ -214,7 +246,7 @@ public abstract class IBiomGenerator
         if (structure == null)
         {
             structure = newStructure;
-            return (width, height);
+            return;
         }
         (int, int) exitPos;
         PreExit otherExit;
@@ -231,8 +263,10 @@ public abstract class IBiomGenerator
 
         structure.AddExitPair(direction, otherExit, new PreExit(exitPos.Item1, structure.Id), newStructure);
         structure = newStructure;
-        return (width, height);
+        return;
     }
+
+    
     /// <returns>Returns this exit pos and structure exit pos</returns>
     private (int, int) GetExitsPos(int pos, int structurePos, int length, int structureLength, int cellSize)
     {

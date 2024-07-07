@@ -8,7 +8,14 @@ using UnityEngine;
 public class ButtonTemplate : UIItem
 {
     public bool Selected { get; private set; } = false;
-    public bool Hoverable { get; set; }
+    private bool hoverable;
+    public bool Hoverable
+    {
+        get => hoverable; set
+        {
+            hoverable = value;
+        }
+    }
     private bool Selectable { get; set; }
     /// <summary>
     /// 
@@ -18,26 +25,22 @@ public class ButtonTemplate : UIItem
     /// <param name="selectable">Whether this button can be selected</param>
     /// <param name="hoverTransition">Leave null for default transition</param>
     /// <param name="selectedTransition">Leave null for default transition</param>
-    public ButtonTemplate(GameObject go, bool hoverable, bool selectable, Transitable hoverTransition = null, Transitable selectedTransition = null, ToolsSystem.PauseType pauseType = ToolsSystem.PauseType.Inventory) : base(go, pauseType)
+    public ButtonTemplate(GameObject go, bool hoverable, bool selectable, Transitable hoverTransition = null, Transitable selectedTransition = null, ToolsSystem.PauseType pauseType = ToolsSystem.PauseType.Inventory, params ToolsSystem.PauseType[] pauseTypes) : base(go, pauseType, pauseTypes)
     {
         this.Hoverable = hoverable;
         this.Selectable = selectable;
-        if (hoverable)
+        if (hoverTransition == null)
         {
-            if (hoverTransition == null)
-            {
-                hoverTransition = ColorChangable.StandardHover();
-            }
-            AddTransition(hoverTransition, "hover");
+            hoverTransition = ColorChangable.StandardHover();
         }
-        if (selectable)
+        AddTransition(hoverTransition, "hover");
+
+        if (selectedTransition == null)
         {
-            if (selectedTransition == null)
-            {
-                selectedTransition = ColorChangable.StandardSelect();
-            }
-            AddTransition(selectedTransition, "select");
+            selectedTransition = ColorChangable.StandardSelect();
         }
+        AddTransition(selectedTransition, "select");
+
         var box = Go.AddComponent<BoxCollider2D>();
         var rect = Go.GetComponent<RectTransform>().rect;
         box.offset = new Vector2(rect.width / 2, -rect.height / 2);
