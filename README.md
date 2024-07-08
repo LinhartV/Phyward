@@ -7,7 +7,7 @@ Pokud si chce hráč vyrobit objem, musí nalézt tři dráhy, které mezi sebou
 Tímto způsobem se hráč učí fyziku, nicméně stále v rámci toho, že si jen snaží vycraftit lepší zbraň v počítačové hře ;)
 
 ## Odkaz ke stažení
-https://drive.google.com/file/d/1P8abaR9JAjosCbs5NWWY1UXbBemiy1Cq/view?usp=drive_link
+https://drive.google.com/file/d/1Jo7uAP_SyiKnLSquGB7HoLpaPiU6IP-b/view?usp=sharing
 
 1) Stáhněte si složku
 2) Extrahujte
